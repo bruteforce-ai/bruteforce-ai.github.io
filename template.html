@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transformer Architectures | AI Journal</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/theme.css">
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- MathJax/KaTeX -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+    <!-- Prism.js -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+
+    <!-- Mermaid.js for flowcharts -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+
+    <!-- Theme Logic -->
+    <script src="js/theme.js"></script>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="nav-logo">
+                brute.ai
+            </a>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="about.html" class="nav-link">About</a>
+                <button id="theme-toggle" class="theme-toggle">
+                    <i data-lucide="moon"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <header style="margin: 3rem 0;">
+            <p
+                style="color: var(--accent-primary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
+                <a href="index.html">NLP Series</a>
+            </p>
+            <h1>Flowcharts and Diagrams</h1>
+            <p style="color: var(--text-muted);">Visualizing complex algorithms and system flows.</p>
+        </header>
+
+        <section>
+            <div class="table-of-contents"></div>
+
+            <h2>Flowcharts (Horizontal & Vertical)</h2>
+            <p>Using <code>Mermaid.js</code>, you can create various shapes like rectangles, diamonds (decisions), and
+                circles, orienting them as needed.</p>
+
+            <h3>Horizontal Process Flow</h3>
+            <div class="media-container flowchart-box">
+                <div class="mermaid">
+                    graph LR
+                    A[Input Text] --> B(Tokenization)
+                    B --> C{Embedding?}
+                    C -- Yes --> D[Vector Space]
+                    C -- No --> E[Raw Indices]
+                    D --> F((Output))
+                    E --> F
+                </div>
+                <p class="media-caption">Horizontal (Left-to-Right) flowchart with mixed shapes.</p>
+            </div>
+
+            <h3>Vertical System Architecture</h3>
+            <div class="media-container flowchart-box">
+                <div class="mermaid">
+                    graph TD
+                    Start([App Start]) --> Pre[/User Input/]
+                    Pre --> Model[[Neural Network]]
+                    Model --> Cache[(Database Cache)]
+                    Cache --> Opt{Optimization}
+                    Opt --> |Converged| End([Result])
+                    Opt --> |Not Converged| Model
+                </div>
+                <p class="media-caption">Vertical flow showcasing Database, Decisions, and Input shapes.</p>
+            </div>
+
+            <h2>Equations and Text Blocks</h2>
+            <p>The Transformer model, introduced in <span class="highlight">"Attention Is All You Need"</span>, changed
+                the landscape of NLP by replacing recurrent units with self-attention mechanisms.</p>
+
+            <h2>Self-Attention Mechanism</h2>
+            <p>At the core of the Transformer is the Scaled Dot-Product Attention. For a given set of queries $Q$, keys
+                $K$, and values $V$, the attention is calculated as:</p>
+
+            <p>Where $d_k$ is the dimensionality of the keys. This scaling factor helps prevent the dot products from
+                growing too large in magnitude, which would push the softmax into regions with extremely small
+                gradients.</p>
+
+            <div class="math-block plain">
+                $$\text{MultiHead}(Q, K, V) = \text{Concat}(\text{head}_1, \dots, \text{head}_h)W^O$$
+
+                $$\text{This is a plain math block without background styling.}$$
+            </div>
+
+            <div class="callout callout-info">
+                <strong>Note:</strong> Multi-Head Attention allows the model to jointly attend to information from
+                different representation subspaces at different positions.
+            </div>
+
+            <h2>Implementation Snippet</h2>
+            <p>Here is a simplified implementation of the attention head in Python:</p>
+
+            <pre class="language-python"><code>import torch
+import torch.nn.functional as F
+
+def scaled_dot_product_attention(q, k, v, mask=None):
+    d_k = q.size(-1)
+    scores = torch.matmul(q, k.transpose(-2, -1)) /  math.sqrt(d_k)
+    
+    if mask is not None:
+        scores = scores.masked_fill(mask == 0, -1e9)
+    
+    attention_weights = F.softmax(scores, dim=-1)
+    return torch.matmul(attention_weights, v), attention_weights</code></pre>
+
+            <blockquote>
+                "The fundamental goal of attention is to focus on specific parts of the input sequence that are most
+                relevant to the current output generation."
+            </blockquote>
+
+            <h2>Equation and Visualization</h2>
+            <div class="split-layout">
+                <div class="media-container" style="margin: 0;">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/9/91/Full_GPT_architecture.png"
+                        alt="Architecture mini">
+                    <p class="media-caption">Compact view of the architecture.</p>
+                </div>
+                <div>
+                    <div class="math-block">
+                        $$\text{MultiHead}(Q, K, V) = \text{Concat}(\text{head}_1, \dots, \text{head}_h)W^O$$
+                    </div>
+                </div>
+            </div>
+
+            <h2>Interactive Mathematical Visualizations</h2>
+            <p>You can embed real-time functioning graphs using the lightweight mini-graph system directly in your HTML.
+                Use simple attributes to dictate functions, annotations, and sizing.</p>
+
+            <div class="mini-graph" data-function="x => Math.sin(x) * Math.exp(-0.15 * x)" data-min="0" data-max="20"
+                data-x-ticks="0, 5, 10, 15, 20" data-y-ticks="-0.5, 0, 0.5, 1" data-x-title="Time (s)"
+                data-y-title="Amplitude" data-title="Damped Harmonic Oscillator" data-width="100%" data-height="350px"
+                data-color="#f59e0b">
+            </div>
+
+            <h2>Data Tables & Layouts</h2>
+            <p>Clean, beautiful table designs to present datasets. You can render these independently or put them
+                side-by-side with your explanations.</p>
+
+            <h3>1. Side-by-Side: Text/Math (Left) & Table (Right)</h3>
+            <p>We use the <code>.side-by-side</code> and <code>.ratio-2-1</code> classes to easily create responsive
+                column layouts. It collapses to a single column automatically on mobile.</p>
+
+            <div class="side-by-side ratio-2-1 align-start">
+                <div class="side-content">
+                    <h4>Conditional Entropy Calculation</h4>
+                    <p>Let's calculate the conditional entropy for a given feature $X$ over classes $Y$.</p>
+                    <div class="math-block plain" style="margin: 1rem 0;">
+                        $$H(Y|X) = - \sum_{i} P(x_i) \sum_{j} P(y_j|x_i) \log_2 P(y_j|x_i)$$
+                    </div>
+                    <p>As you can see in the table, the dataset is split. We map probability distributions based on
+                        "Temp" to assess our information gain.</p>
+                </div>
+
+                <div class="table-container">
+                    <!-- Options: header-accent, header-dark, striped, hoverable, compact -->
+                    <table class="data-table header-accent hoverable compact">
+                        <thead>
+                            <tr>
+                                <th>Day</th>
+                                <th>Temp</th>
+                                <th>Play</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>Hot</td>
+                                <td>No</td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>Hot</td>
+                                <td>No</td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>Mild</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td>Cool</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td>Cool</td>
+                                <td>No</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <h3>2. Standalone Independent Table (Full Width)</h3>
+            <div class="table-container">
+                <table class="data-table striped hoverable">
+                    <thead>
+                        <tr>
+                            <th>Model Architecture</th>
+                            <th>Parameters</th>
+                            <th>Release Date</th>
+                            <th>Key Optimization</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>GPT-3</strong></td>
+                            <td>175 Billion</td>
+                            <td>June 2020</td>
+                            <td>Sparse Attention</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Chinchilla</strong></td>
+                            <td>70 Billion</td>
+                            <td>March 2022</td>
+                            <td>Compute-optimal scaling</td>
+                        </tr>
+                        <tr>
+                            <td><strong>LLaMA 2</strong></td>
+                            <td>70 Billion</td>
+                            <td>July 2023</td>
+                            <td>Grouped-Query Attention (GQA)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h2>Embedded Study Material</h2>
+            <p>Below is the embedded PDF document for this topic:</p>
+
+            <div class="pdf-container">
+                <iframe src="Tathagata_Dey_Oct25.pdf" type="application/pdf"></iframe>
+            </div>
+
+            <div class="media-container"
+                style="background: var(--bg-tertiary); padding: 1.5rem; border-radius: 1rem; margin-top: 1rem;">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 1rem;">
+                    <i data-lucide="file-text" style="width: 24px; height: 24px; color: var(--text-muted);"></i>
+                    <p style="margin: 0;"><strong>Tathagata_Dey_Oct25.pdf</strong></p>
+                    <a href="Tathagata_Dey_Oct25.pdf" target="_blank" class="nav-link"
+                        style="color: var(--accent-primary); font-weight: 600;">Download / Open in New Tab</a>
+                </div>
+            </div>
+
+            <section class="references-section">
+                <h2>References & Further Reading</h2>
+                <ol class="references-list">
+                    <li>Vaswani, A., et al. (2017). <a href="https://arxiv.org/abs/1706.03762" target="_blank">Attention
+                            Is All You Need</a>. arXiv.</li>
+                    <li>Alammar, J. (2018). <a href="https://jalammar.github.io/illustrated-transformer/"
+                            target="_blank">The Illustrated Transformer</a>.</li>
+                    <li>Stanford CS224N. <a href="http://web.stanford.edu/class/cs224n/" target="_blank">NLP with Deep
+                            Learning</a>.</li>
+                    <li>Phuong, M., & Hutter, M. (2022). <a href="https://arxiv.org/abs/2207.09238"
+                            target="_blank">Formal Algorithms for Transformers</a>.</li>
+                </ol>
+            </section>
+        </section>
+    </main>
+
+    <footer class="full-footer"></footer>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="js/main.js"></script>
+</body>
+
+</html>

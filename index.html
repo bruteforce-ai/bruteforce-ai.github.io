@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI & ML Journal | Study Materials</title>
+    <meta name="description" content="A curated collection of ML & AI study materials and research blogs.">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/theme.css">
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- JavaScript -->
+    <script src="js/theme.js"></script>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="nav-logo">
+                brute.ai
+            </a>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="about.html" class="nav-link">About</a>
+                <!-- <a href="#" class="nav-link">Courses</a> -->
+                <!-- <a href="#" class="nav-link">Research</a> -->
+                <button id="theme-toggle" class="theme-toggle">
+                    <i data-lucide="moon"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <header class="container" style="text-align: center; padding: 2rem 0 1rem 0;">
+        <h1>brute.ai</h1>
+        <p style="font-size: 1.1rem; color: var(--text-secondary); max-width: 600px; margin: 0 auto;">
+            Come on! AI is just a subset of algorithms our brain can run. <br>
+            And all AI needs from us is just <span class="highlight">Attention!</span>
+        </p>
+    </header>
+
+    <main class="container">
+        <!-- Search Section -->
+        <div class="search-container">
+            <i data-lucide="search" class="search-icon"></i>
+            <input type="text" id="topic-search" class="search-input"
+                placeholder="Search for topics, architectures, courses...">
+        </div>
+
+        <!-- Categories Section -->
+        <section class="category-section">
+            <div class="category-header">
+                <!-- <span class="category-badge">Architecture</span> -->
+                <h2> Fundamental Machine Learning</h2>
+            </div>
+            <div class="topic-list">
+                <a href="fundamental_ml/decision_tree.html" class="topic-item special">
+                    Decision Trees
+                </a>
+            </div>
+
+            <div class="category-header">
+                <!-- <span class="category-badge">Architecture</span> -->
+                <h2> Natural Language Processing (NLP)</h2>
+            </div>
+            <div class="topic-list">
+                <a href="nlp/rnn.html" class="topic-item special">
+                    Recurrent Neural Networks (RNN)
+                </a>
+            </div>
+        </section>
+
+
+        <!-- Highlighted Special Topic (Injected among categories) -->
+        <!-- <section class="featured-section">
+            <a href="#" class="featured-topic">
+                <div>
+                    <span class="category-badge" style="background: #2c4d42; color: white;">Course</span>
+                    <h3>Stanford CS229: Machine Learning</h3>
+                    <p>Notes and implementations for the world-renowned ML course.</p>
+                </div>
+            </a>
+        </section> -->
+    </main>
+
+    <footer class="full-footer"></footer>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="js/main.js"></script>
+</body>
+
+</html>

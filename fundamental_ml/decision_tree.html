@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DT | brute.ai</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="../css/theme.css">
+    <link rel="stylesheet" href="../css/style.css">
+
+    <!-- MathJax/KaTeX -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+    <!-- Prism.js -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+
+    <!-- Theme Logic -->
+    <script src="../js/theme.js"></script>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="nav-logo">
+                brute.ai
+            </a>
+            <div class="nav-links">
+                <a href="../index.html" class="nav-link">Home</a>
+                <a href="../about.html" class="nav-link">About</a>
+                <button id="theme-toggle" class="theme-toggle">
+                    <i data-lucide="moon"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <header style="margin: 3rem 0;">
+            <p
+                style="color: var(--accent-primary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
+                <a href="../index.html">Fundamental ML Series</a>
+            </p>
+            <h1>Decision Trees</h1>
+            <!-- <p style="color: var(--text-muted);">March 2024 • 15 min read</p> -->
+        </header>
+
+        <section>
+            <div class="table-of-contents"></div>
+
+            <p>Decision Trees are one of the fundamental ways of solving classification problems. It is rule based, and
+                as the name suggestes, like a tree. So, we divide each node of a tree based on some feature and get one
+                step closer towards predicting classes. We will dive deeper into the process, but before that if you
+                don't have idea about <em>tree data structure</em>, it's a good time to pause and read about it.</p>
+
+
+            <h2><span class="highlight-example">Example:</span>Let's Walk Through a Tree</h2>
+            <p>
+                Imagine you have a dataset of <strong>fruits </strong>, and you want to classify them as <strong>Apple,
+                    Banana,
+                    Watermelon or
+                    Guava</strong>. And to classify we know the shape, size and colour of fruits. We can build a
+                decision tree to
+                classify them based on their features.
+            <h3>Step 1: Colour</h3>
+            Since, we know we classify by rules. So, to think about it there is one rule that can separate out
+            <strong>watermelon</strong> and <strong>guava</strong> from the rest. Guessed it? yes, the colour.
+            <h3>Step 2: Shape</h3>
+            Now, we are left with <strong>apple</strong> and <strong>banana</strong>. And we know that apple is round
+            and
+            banana is long. So, we can build a decision tree to classify them based on their features.
+            <h3>Step 3: Guava and Watermelon Paradox</h3>
+            In left node, we are left with Guava and Watermelon. And we know that guava is small and watermelon is
+            large. So, we can build a decision tree to classify them based on their features.
+            <br><br>
+            The whole decision tree will look something like this:
+            <img src="../assets/gifs/decision_tree.gif" alt="Decision Tree" style="width: 80%;">
+            </p>
+
+
+            <h2><span class="highlight-maths">Technical:</span>Let's Get Real with Maths and Intution</h2>
+            <p>
+                I said we predict classes through rule-based decisions, but those rules are not exactly arbitrary or
+                completely out of guesses. In practice it's still a guess, just not by any human. We rely on
+                mathematical guesses. And to determine the best rule, we go through a series of mathematical
+                calculations. Let's dive into it.
+
+                <br> Before we start, we need some other knowledge as well.
+                <br><br>
+            </p>
+
+            <h3>Entropy</h3>
+            <p>
+                We probably read some things about entropy in our physics textbooks, where entropy represents
+                <em>chaos</em>
+                in the system. In mathematics, the idea is not very far.
+                <br>
+                <strong><em>
+                        Entropy represents the uncertainty of <span class="highlight">class distribution in a node.
+                        </span>
+                    </em></strong>
+                For example, consider in a node we have 5 apples and 5 bananas. Then the entropy is 1, since the
+                uncertainty
+                is very high. Anytime you pick a fruit at random, there is a highly uncertain prediction of what's
+                getting
+                picked.
+                <br>
+                However, for a node with 10 apples and 2 bananas, the entropy is less, since the uncertainty is very
+                low.
+                Anytime
+                you pick a fruit at random, there is a highly certain prediction of apple coming up.
+                <br><br>
+                Mathematically, we will define entropy as:
+            <div class="math-block plain">
+                $$H(Y) = -\sum_{i=1}^{k} P(Y=y_i) \log_2 P(Y=y_i)$$
+            </div>
+
+
+            Where $k$ is the number of classes, and $P(Y=y_i)$ is the probability of class $i$.
+            <br><br>
+            Let's take a moment to think about it. Since, it is a negative function, and $\log_2 P(Y=y_i)$ is always
+            negative, the overall entropy will be positive. And when the probability of any class goes down, the
+            entropy goes up. And when the <span class="highlight">probability of any class goes up, the entropy goes
+                down</span>. So, it suffices our
+            initial approach to define and understand entropy of a system.
+            <br><br>
+            Let's look at the <strong>entropy of a coin toss</strong>. If the coin is unbiased, the probability of heads
+            is 0.5 and the
+            probability of tails is 0.5. So, the entropy becomes 1. However, the more likely it is to get one of haids
+            or tails, the low entropy gets. You can do the math to verify the graph below.
+
+            <div class="mini-graph" data-function="x => -x * Math.log2(x) - (1-x) * Math.log2(1-x)" data-min="0"
+                data-max="1" data-x-ticks="0, 0.25, 0.5, 0.75, 1" data-y-ticks="-0.5, 0, 0.5, 1"
+                data-x-title="Prob of heads" data-y-title="Entropy" data-width="100%" data-height="90%"
+                data-color="#f59e0b" data-title="Entropy H(p) for Binary Classification" style="width: 60%;">
+            </div>
+            </p>
+
+
+            <h3>Conditional Entropy</h3>
+            <p>
+                Conditional entropy is the <span class="highlight">entropy of a random variable given that another
+                    random variable has been
+                    observed.</span>
+                <br><br>
+                Mathematically, we will define conditional entropy as:
+            <div class="math-block plain">
+                $$H(Y|X) = - \sum_{i=1}^{n} P(X=x_i) H(Y|X=x_i)$$
+                $$\begin{aligned}
+                H(Y|X) = - \sum_{i=1}^{n} P(X=x_i) \sum_{j=1}^{k} \Big[ &P(Y=y_j|X=x_i) \\
+                &\cdot \log_2 P(Y=y_j|X=x_i) \Big]
+                \end{aligned}$$
+            </div>
+            Look at the equation for a moment to get the idea. Here <span class="highlight">$n$ is the number of
+                features, and $k$ is the number
+                of classes</span>. So let's see the inner summation first, it is just basic definition of conditional
+            entropy,
+            deduced from entropy. It has summation of entropies over all prediction classes.
+            Now we ddd the conditional entropies for each feature in this way.
+
+            <br><br>
+            Let's take the following example. On the right we can see a sample dataset.
+            <div class="side-by-side ratio-1-2 align-start">
+                <div class="table-container">
+                    <!-- Options: header-accent, header-dark, striped, hoverable, compact -->
+                    <table class="data-table hoverable compact">
+                        <thead>
+                            <tr>
+                                <th>$X_1$</th>
+                                <th>$X_2$</th>
+                                <th>$Y$</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>T</td>
+                                <td>T</td>
+                                <td>T</td>
+                            </tr>
+                            <tr>
+                                <td>T</td>
+                                <td>F</td>
+                                <td>T</td>
+                            </tr>
+                            <tr>
+                                <td>T</td>
+                                <td>T</td>
+                                <td>T</td>
+                            </tr>
+                            <tr>
+                                <td>T</td>
+                                <td>F</td>
+                                <td>T</td>
+                            </tr>
+                            <tr>
+                                <td>F</td>
+                                <td>T</td>
+                                <td>T</td>
+                            </tr>
+                            <tr>
+                                <td>F</td>
+                                <td>F</td>
+                                <td>F</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+
+                <div class="side-content">
+                    <div class="math-block plain" style="margin: 1rem 0; overflow-x: auto;">
+                        $$\begin{aligned}
+                        H(Y|X_1) = &- P(X_1=T) H(Y|X=T) \\
+                        &- P(X_1=F) H(Y|X=F)
+                        \end{aligned}$$
+                        $$\begin{aligned}
+                        H(Y|X=T) = &- P(Y=T|X=T) \log_2 P(Y=T|X=T)\\
+                        &- P(Y=F|X=T) \log_2 P(Y=F|X=T)
+                        \end{aligned}$$
+                    </div>
+
+                    <p>Now using basics of conditional probability, we can figure out that $H(Y|X=T)$ is $0$ and
+                        similarly, $H(Y|X=F)$ is $-1$. Also, simple intuition into the data gives us that $P(X_1=T)$ is
+                        $2/3$ and $P(X_1=F)$ is $1/3$.
+                    </p>
+
+                    <div class="math-block plain" style="margin: 1rem 0; overflow-x: auto;">
+                        $$\begin{aligned}
+                        H(Y|X_1) = -[2/3 * 0 + 1/3 * (-1)] = 1/3
+                        \end{aligned}$$
+                    </div>
+                </div>
+            </div>
+            </p>
+
+
+
+            <h3>Information Gain</h3>
+            <p>
+                This is our first step towards getting back to the point of decision trees. We started with the question
+                <em>How to decide on splitting rule?</em> and the question ends here.
+                <br>
+                We split, based on how much information we can gain. In other words, using <em>entropy</em> we can
+                define uncertainty of distribution in mathematical terms. Now, a <span class="highlight">good split of
+                    nodes is a case where
+                    this uncertainty reduces</span>. And in child nodes we are more certain about the class distribution
+                or in
+                other words, more certain about outcome of a random pick.
+                <br><br>
+                Hence, mathematically we define <strong>Information Gain</strong> as follows.
+
+            <div class="math-block plain" style="margin: 1rem 0; overflow-x: auto;">
+                $$\begin{aligned}
+                I(X, Y) = H(Y) - H(Y|X) = H(X) - H(X|Y)
+                \end{aligned}$$
+            </div>
+
+            Where $I(X_i, Y)$ is the amount of information $X_i$ comes about $Y$ and vice versa.
+            <br>
+            So, for a feature $X_i$ if we divide the node based on this, the conditional entropy in next level of the
+            tree is $H(Y|X_i)$. So, we want to maximize the difference between current entropy and entropy after split.
+
+            <br><br>
+            Hence, our objective for building decision tree is,
+            <strong>Find feature with maximum information gain and split on it.</strong>
+            <div class="math-block plain" style="margin: 1rem 0; overflow-x: auto;">
+                $$\begin{aligned}
+                feature = argmax_{i}[I(X_i, Y)] = argmax_{i} [H(Y) - H(Y|X_i)]
+                \end{aligned}$$
+            </div>
+            </p>
+
+            <h3>Gini Index</h3>
+            <p>
+                While entropy measures impurity using logarithms, the Gini index offers a computationally simpler
+                alternative that arrives at very similar splits in practice.The Gini index of a node measures the
+                probability that a randomly chosen sample would be incorrectly classified if it were labelled according
+                to the class distribution at that node. For a node with $C$ classes, it is defined as:
+            </p>
+
+            <div class="math-block plain" style="margin: 1rem 0; overflow-x: auto;">
+                $$\begin{aligned}
+                Gini(t) = 1 - \sum_{i=1}^{C} p_i^2
+                \end{aligned}$$
+            </div>
+
+            Where $p_i$ is the probability of class $i$ at node $t$. The Gini index is 0 for a pure node (all samples
+            belong to the same class) and 1 for a completely mixed node (samples are equally distributed among all
+            classes).
+
+            <h3> Gini Gain: Choosing the best split</h3>
+            <p>
+                Just as information gain measures the reduction in entropy after a split, Gini gain measures the
+                reduction in impurity. For a feature that splits node tt
+                t into children
+                $t_L$ (left) and $t_R$ (right):
+
+            <div class="math-block plain">
+                $$
+                \begin{aligned}
+                \text{Gini Gain}(t) = Gini(t) - \left( \frac{n_L}{n} Gini(t_L) + \frac{n_R}{n} Gini(t_R) \right)
+                \end{aligned}
+                $$
+            </div>
+
+            where $n$ is the total number of samples at node $t$, and $n_L, n_R$ are the sample counts in each child.
+            The algorithm evaluates this for every candidate feature and threshold, selecting the split that
+            maximises Gini gain — equivalently, the one that minimises weighted Gini impurity across the children.
+            </p>
+
+
+            <h2><span class="highlight-example">Try Out:</span> Build Trees by Hand
+            </h2>
+            <div class="side-by-side ratio-1-2 align-start">
+                <div class="table-container">
+                    <!-- Options: header-accent, header-dark, striped, hoverable, compact -->
+                    <table class="data-table hoverable compact">
+                        <thead>
+                            <tr>
+                                <th>$X_1$</th>
+                                <th>$X_2$</th>
+                                <th>$Y$</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>0</td>
+                                <td>0</td>
+                                <td>0</td>
+                            </tr>
+                            <tr>
+                                <td>0</td>
+                                <td>1</td>
+                                <td>0</td>
+                            </tr>
+                            <tr>
+                                <td>1</td>
+                                <td>0</td>
+                                <td>1</td>
+                            </tr>
+                            <tr>
+                                <td>1</td>
+                                <td>1</td>
+                                <td>0</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+
+                <div class="side-content">
+                    <p>
+                        Here is a table of data points. I believe from just a look at the table you can figure out it's
+                        the <span class="highlight">truth table</span> for $X_1 \land \neg X_2$. And if you are not
+                        aware of truth table, no worries, it is not required.
+                        <br>
+                        Now, we will build a decisition tree for this data. <strong>And if you want to try yourself, I
+                            suggest to not read further.</strong>
+                        <br>
+                        Through some basic calculations, we can find that,
+                    </p>
+
+
+                    <div class="math-block plain" style="margin: 1rem 0; overflow-x: auto;">
+                        $$\begin{aligned}
+                        H(Y|X_1) = H(Y|X_2)= 0.5
+                        \end{aligned}$$
+                    </div>
+
+                    <p>So, there is no preference. Both of them will contribute equal in information gain. And we can
+                        split based on any one.</p>
+                </div>
+            </div>
+
+            <h3>Few more exercises</h3>
+            <p>
+                Here are few more ones that you can try out. Build the truth tables for these functions or if you don't
+                know, find it somewhere. The tables will act as your dataset and try to build the tree.
+            <div class="math-block plain">
+                $$\begin{aligned}
+                Y = A \lor [B \land C] \\
+                Y = A \oplus B \\
+                Y = [A \land B] \lor [C \land D]
+                \end{aligned}$$
+            </div>
+            </p>
+
+
+
+            <h2>
+                <span class="highlight-implementation">Code It</span>: Decision Tree from Scratch
+            </h2>
+
+            <pre class="language-python"><code>import torch
+# ── 1. Imports ────────────────────────────────────────────────────────────────
+from sklearn.tree import DecisionTreeClassifier, export_text, plot_tree
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report, accuracy_score
+import matplotlib.pyplot as plt
+
+
+# ── 2. Load data ──────────────────────────────────────────────────────────────
+X, y = load_iris(return_X_y=True)
+feature_names = load_iris().feature_names
+target_names  = load_iris().target_names
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+
+# ── 3. Train ──────────────────────────────────────────────────────────────────
+clf = DecisionTreeClassifier(
+    criterion="gini",       # or "entropy" for information gain
+    max_depth=4,            # limits tree depth to avoid overfitting
+    min_samples_split=5,    # min samples required to split a node
+    min_samples_leaf=2,     # min samples required at a leaf node
+    random_state=42
+)
+clf.fit(X_train, y_train)
+
+
+# ── 4. Evaluate ───────────────────────────────────────────────────────────────
+y_pred = clf.predict(X_test)
+
+print(f"Accuracy: {accuracy_score(y_test, y_pred):.2%}\n")
+print(classification_report(y_test, y_pred, target_names=target_names))
+
+
+# ── 5. Inspect the tree (text) ────────────────────────────────────────────────
+print(export_text(clf, feature_names=feature_names))
+
+
+# ── 6. Visualise the tree ─────────────────────────────────────────────────────
+plt.figure(figsize=(16, 6))
+plot_tree(
+    clf,
+    feature_names=feature_names,
+    class_names=target_names,
+    filled=True,         # color nodes by majority class
+    rounded=True,
+    fontsize=10
+)
+plt.title("Decision Tree — Iris Dataset")
+plt.tight_layout()
+plt.show()
+
+
+# ── 7. Feature importance ─────────────────────────────────────────────────────
+for name, importance in zip(feature_names, clf.feature_importances_):
+    print(f"  {name:<30} {importance:.4f}")
+</code></pre>
+
+
+
+            <div class="callout callout-info">
+                <strong>When do we stop building the tree further?</strong>
+                <br>
+                - Well one solution can be to keep splitting until we have only one class in each node. But that can
+                lead to overfitting.
+                <br>
+                - Then maybe don't split a node if data points are identical on remaining attributes.
+                <br>
+                - User thresholds on number of samples in a node, information gain, depth of tree and so on.
+            </div>
+
+            <div class="callout callout-info">
+                <strong>Pruning</strong>
+                <br>
+                We use pruning to reduce overfitting, or in other words reduce a large tree to a smaller one.
+                <br>
+                Some common tactics are to use the error on validation set to decide whether to prune a node or not
+                (<strong>Reduced Error Pruning</strong>). In practice, sometimes we do intentionally overfit a tree and
+                grow as long as possible and perform pruning later, it is called <strong>Rule Post-Pruning</strong>
+            </div>
+
+
+            <section class="references-section">
+                <h2>References & Further Reading</h2>
+                <ol class="references-list">
+                    <li>Trees</li>
+                    <li>Read Aman.ai blog on <a
+                            href="https://aman.ai/primers/ai/architectures/#recurrent-neural-networks-rnn">Recurrent
+                            Neural Networks</a></li>
+                </ol>
+            </section>
+        </section>
+    </main>
+
+    <footer class="full-footer"></footer>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="../js/main.js"></script>
+</body>
+
+</html>
