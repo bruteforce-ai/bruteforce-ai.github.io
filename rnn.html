@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RNN | brute.ai</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="../css/theme.css">
+    <link rel="stylesheet" href="../css/style.css">
+
+    <!-- MathJax/KaTeX -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+    <!-- Prism.js -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+
+    <!-- Theme Logic -->
+    <script src="../js/theme.js"></script>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="nav-logo">
+                brute.ai
+            </a>
+            <div class="nav-links">
+                <a href="../index.html" class="nav-link">Home</a>
+                <a href="../about.html" class="nav-link">About</a>
+                <button id="theme-toggle" class="theme-toggle">
+                    <i data-lucide="moon"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <header style="margin: 3rem 0;">
+            <p
+                style="color: var(--accent-primary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
+                <a href="../index.html">NLP Series</a>
+            </p>
+            <h1>Recurrent Neural Networks (RNN)</h1>
+            <!-- <p style="color: var(--text-muted);">March 2024 • 15 min read</p> -->
+        </header>
+
+        <section>
+            <p>RNNs, <strong>the first step humanity took towards solving sequential problems</strong>. Let's be honest,
+                when I started learning ML I was more fascinated by image problems (more with CNN), maybe because it was
+                easier to visualize initially. But with time I realised, this is more challenging to solve and more
+                realisting for us. And if you want to pursue <span class="highlight">Natural Language Processing</span>
+                someday, let's say this is the only path. Okay, enough trash talk, let's dive into it!</p>
+
+
+            <h2><span class="highlight-intuition">Intuition:</span> How Do RNNs Work?</h2>
+            <p>It is as simple of a neural network can get. At every time instance $t$, it reades one token from input
+                text, say $x_t$ and produces an output $y_t$ and a hidden state $h_t$.</p>
+
+            <h2><span class="highlight-maths">Mathematical Definition:</span></h2>
+            <div class="math-block plain">
+                $$h_t = f(W_{hh}h_{t-1} + W_{xh}x_t + b_h)$$
+                $$y_t = W_{hy}h_t + b_y$$
+            </div>
+
+
+            <!-- <p>Where $d_k$ is the dimensionality of the keys. This scaling factor helps prevent the dot products from
+                growing too large in magnitude, which would push the softmax into regions with extremely small
+                gradients.</p>
+
+            <div class="math-block plain">
+                $$\text{MultiHead}(Q, K, V) = \text{Concat}(\text{head}_1, \dots, \text{head}_h)W^O$$
+
+                $$\text{This is a plain math block without background styling.}$$
+            </div>
+
+            <div class="callout callout-info">
+                <strong>Note:</strong> Multi-Head Attention allows the model to jointly attend to information from
+                different representation subspaces at different positions.
+            </div> -->
+
+
+
+            <blockquote>
+                "The fundamental goal of attention is to focus on specific parts of the input sequence that are most
+                relevant to the current output generation."
+            </blockquote>
+
+            <h2>Equation and Visualization</h2>
+            <div class="split-layout">
+                <div class="media-container" style="margin: 0;">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/9/91/Full_GPT_architecture.png"
+                        alt="Architecture mini">
+                    <p class="media-caption">Compact view of the architecture.</p>
+                </div>
+                <div>
+                    <div class="math-block plain">
+                        $$\text{MultiHead}(Q, K, V) = \text{Concat}(\text{head}_1, \dots, \text{head}_h)W^O$$
+                    </div>
+                </div>
+            </div>
+
+            <h2>Embedded Study Material</h2>
+            <p>Below is the embedded PDF document for this topic:</p>
+
+            <div class="pdf-container">
+                <iframe src="../assets/pdfs/Tathagata_Dey_Oct25.pdf" type="application/pdf"></iframe>
+            </div>
+
+            <div class="media-container"
+                style="background: var(--bg-tertiary); padding: 1.5rem; border-radius: 1rem; margin-top: 1rem;">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 1rem;">
+                    <i data-lucide="file-text" style="width: 24px; height: 24px; color: var(--text-muted);"></i>
+                    <p style="margin: 0;"><strong>Tathagata_Dey_Oct25.pdf</strong></p>
+                    <a href="../assets/pdfs/Tathagata_Dey_Oct25.pdf" target="_blank" class="nav-link"
+                        style="color: var(--accent-primary); font-weight: 600;">Download / Open in New Tab</a>
+                </div>
+            </div>
+
+            <section class="references-section">
+                <h2>References & Further Reading</h2>
+                <ol class="references-list">
+                    <li>Read Aman.ai blog on <a
+                            href="https://aman.ai/primers/ai/architectures/#recurrent-neural-networks-rnn">Recurrent
+                            Neural Networks</a></li>
+                    <li>Colah's Blog: <a href="https://colah.github.io/posts/2015-08-Understanding-LSTMs/">RNNs</a></li>
+                    <li>Stanford CS224N. <a href="http://web.stanford.edu/class/cs224n/" target="_blank">NLP with Deep
+                            Learning</a>.</li>
+                    <li>Phuong, M., & Hutter, M. (2022). <a href="https://arxiv.org/abs/2207.09238"
+                            target="_blank">Formal Algorithms for Transformers</a>.</li>
+                </ol>
+            </section>
+        </section>
+    </main>
+
+    <footer class="full-footer"></footer>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="../js/main.js"></script>
+</body>
+
+</html>
