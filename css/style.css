@@ -257,6 +257,25 @@ pre[class*="language-"] {
     .split-layout {
         flex-direction: column;
     }
+
+    .container {
+        max-width: 100%;
+        margin: 0 auto;
+        padding: 0 0.8rem;
+    }
+
+    .media-container {
+        margin: 0.5rem 0;
+        text-align: center;
+    }
+
+    .media-container img,
+    .media-container video,
+    .media-container iframe {
+        max-width: 130%;
+        border-radius: 0.75rem;
+        box-shadow: var(--card-shadow);
+    }
 }
 
 /* References Section */
@@ -899,7 +918,7 @@ pre[class*="language-"] {
 
     /* Scale down equations so they don't force a horizontal scroll on small screens */
     .math-block {
-        font-size: 0.63rem !important;
+        font-size: 0.72rem !important;
         padding: 0.8rem 0.5rem;
     }
 
