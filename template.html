@@ -250,6 +250,17 @@ def scaled_dot_product_attention(q, k, v, mask=None):
                 </table>
             </div>
 
+            <h2>Linear Regression & Scatter Plots</h2>
+            <p>The mini-graph system now supports scattered data points and residual analysis (showing the error between
+                points and your fitted line). Use <code>data-points</code> for coordinates and
+                <code>data-show-residuals="true"</code> to enable vertical error lines.</p>
+
+            <div class="mini-graph" data-title="Linear Regression: y = x + 2" data-function="x => x + 2"
+                data-points="0,1.8; 1,3.2; 2,3.8; 3,5.5; 4,5.8; 5,7.2" data-show-residuals="true" data-min="0"
+                data-max="5" data-x-title="Independent Variable (X)" data-y-title="Dependent Variable (Y)"
+                data-color="#6366f1" style="width: 70%; margin: 2rem auto;">
+            </div>
+
             <h2>Embedded Study Material</h2>
             <p>Below is the embedded PDF document for this topic:</p>
 

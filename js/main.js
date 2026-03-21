@@ -176,6 +176,8 @@ function initMiniGraphs() {
         const yTicksStr = container.getAttribute('data-y-ticks') || '';
         const heightVal = container.getAttribute('data-height') || '300px';
         const widthVal = container.getAttribute('data-width') || '100%';
+        const pointsStr = container.getAttribute('data-points') || '';
+        const showResiduals = container.getAttribute('data-show-residuals') === 'true';
 
         // Setup Container
         container.classList.add('mini-graph-container');
@@ -205,8 +207,10 @@ function initMiniGraphs() {
                         <line x1="0" y1="100" x2="400" y2="100" class="mini-graph-grid"/>
                         <line x1="200" y1="0" x2="200" y2="200" class="mini-graph-grid"/>
                         
+                        <g class="mini-graph-residuals"></g>
                         <path class="mini-graph-path" d=""></path>
-                        <circle class="mini-graph-point" r="5" style="display:none;"></circle>
+                        <g class="mini-graph-data-points"></g>
+                        <circle class="mini-graph-hover-point" r="5" style="display:none;"></circle>
                     </svg>
                 </div>
                 <div class="mini-graph-x-axis-labels" style="grid-area: labels-x; position: relative; height: 20px;"></div>
@@ -216,123 +220,176 @@ function initMiniGraphs() {
 
         const svg = container.querySelector('.mini-graph-svg');
         const path = container.querySelector('.mini-graph-path');
-        const point = container.querySelector('.mini-graph-point');
+        const hoverPoint = container.querySelector('.mini-graph-hover-point');
+        const dataPointsGroup = container.querySelector('.mini-graph-data-points');
+        const residualsGroup = container.querySelector('.mini-graph-residuals');
         const tooltip = container.querySelector('.mini-graph-tooltip');
         const wrapper = container.querySelector('.mini-graph-svg-wrapper');
         const xAxisLabels = container.querySelector('.mini-graph-x-axis-labels');
         const yAxisLabels = container.querySelector('.mini-graph-y-axis-labels');
 
-        // Evaluate Function
-        let f;
-        try {
-            if (funcStr.includes('=>') || funcStr.trim().startsWith('function')) {
-                f = new Function(`return (${funcStr})`)();
-            } else {
-                f = new Function('x', `return ${funcStr}`);
-            }
-        } catch (e) {
-            console.error("Error parsing function:", e);
-            return;
+        // Parse explicit points
+        let scatteredPoints = [];
+        if (pointsStr) {
+            scatteredPoints = pointsStr.split(';').map(p => {
+                const parts = p.trim().split(',').map(n => parseFloat(n));
+                return { x: parts[0], y: parts[1] };
+            }).filter(p => !isNaN(p.x) && !isNaN(p.y));
         }
 
-        const points = [];
+        // Evaluate Function
+        let f = null;
+        if (funcStr) {
+            try {
+                if (funcStr.includes('=>') || funcStr.trim().startsWith('function')) {
+                    f = new Function(`return (${funcStr})`)();
+                } else {
+                    f = new Function('x', `return ${funcStr}`);
+                }
+            } catch (e) {
+                console.error("Error parsing function:", e);
+            }
+        }
+
+        const curvePoints = [];
         const steps = 100;
         let minY = Infinity, maxY = -Infinity;
 
-        for (let i = 0; i <= steps; i++) {
-            const x = minX + (i / steps) * (maxX - minX);
-            try {
-                const y = f(x);
-                if (!isNaN(y) && isFinite(y)) {
-                    points.push({ x, y });
-                    minY = Math.min(minY, y);
-                    maxY = Math.max(maxY, y);
-                }
-            } catch (e) { console.error("Math error:", e); }
+        // Collect Y-range from scattered points
+        scatteredPoints.forEach(p => {
+            minY = Math.min(minY, p.y);
+            maxY = Math.max(maxY, p.y);
+        });
+
+        if (f) {
+            for (let i = 0; i <= steps; i++) {
+                const x = minX + (i / steps) * (maxX - minX);
+                try {
+                    const y = f(x);
+                    if (!isNaN(y) && isFinite(y)) {
+                        curvePoints.push({ x, y });
+                        minY = Math.min(minY, y);
+                        maxY = Math.max(maxY, y);
+                    }
+                } catch (e) { }
+            }
         }
 
-        // Add some padding to Y axis
+        if (minY === Infinity) { minY = 0; maxY = 1; }
+
+        // Add padding
         const rangeY = maxY - minY;
-        const padY = rangeY === 0 ? 1 : rangeY * 0.1;
+        const padY = rangeY === 0 ? 1 : rangeY * 0.15;
         const drawMinY = minY - padY;
         const drawMaxY = maxY + padY;
 
-        // Draw X Ticks
-        let xTicks = [];
-        if (xTicksStr) {
-            xTicks = xTicksStr.split(',').map(n => parseFloat(n.trim()));
-        } else {
-            xTicks = [minX, (minX + maxX) / 2, maxX];
-        }
-        let pxHtml = '';
-        xTicks.forEach(val => {
-            if (isNaN(val)) return;
-            const pct = ((val - minX) / (maxX - minX)) * 100;
-            if (pct >= 0 && pct <= 100) {
-                pxHtml += `<div class="mini-graph-tick-x" style="left: ${pct}%;">${Number.isInteger(val) ? val : val.toFixed(2)}</div>`;
-            }
-        });
-        xAxisLabels.innerHTML = pxHtml;
-
-        // Draw Y Ticks
-        let yTicks = [];
-        if (yTicksStr) {
-            yTicks = yTicksStr.split(',').map(n => parseFloat(n.trim()));
-        } else {
-            yTicks = [minY, (minY + maxY) / 2, maxY];
-        }
-        let pyHtml = '';
-        yTicks.forEach(val => {
-            if (isNaN(val)) return;
-            const pct = ((val - drawMinY) / (drawMaxY - drawMinY)) * 100;
-            if (pct >= 0 && pct <= 100) {
-                pyHtml += `<div class="mini-graph-tick-y" style="bottom: ${pct}%;">${Number.isInteger(val) ? val : val.toFixed(2)}</div>`;
-            }
-        });
-        yAxisLabels.innerHTML = pyHtml;
-
-        // Create Path D string
+        // Scaling Helpers
         const scaleX = (val) => ((val - minX) / (maxX - minX)) * 400;
         const scaleY = (val) => 200 - ((val - drawMinY) / (drawMaxY - drawMinY)) * 200;
 
-        let d = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${scaleX(p.x)} ${scaleY(p.y)}`).join(' ');
-        path.setAttribute('d', d);
-        if (color) path.style.stroke = color;
+        // Render Ticks
+        const drawTicks = (labels, ticksStr, isX) => {
+            let ticks = [];
+            if (ticksStr) {
+                ticks = ticksStr.split(',').map(n => parseFloat(n.trim()));
+            } else {
+                const min = isX ? minX : minY;
+                const max = isX ? maxX : maxY;
+                ticks = [min, (min + max) / 2, max];
+            }
+            let html = '';
+            ticks.forEach(val => {
+                const min = isX ? minX : drawMinY;
+                const max = isX ? maxX : drawMaxY;
+                const pct = ((val - min) / (max - min)) * 100;
+                if (pct >= 0 && pct <= 100) {
+                    const style = isX ? `left: ${pct}%;` : `bottom: ${pct}%;`;
+                    const cls = isX ? 'mini-graph-tick-x' : 'mini-graph-tick-y';
+                    html += `<div class="${cls}" style="${style}">${Number.isInteger(val) ? val : val.toFixed(1)}</div>`;
+                }
+            });
+            labels.innerHTML = html;
+        };
+
+        drawTicks(xAxisLabels, xTicksStr, true);
+        drawTicks(yAxisLabels, yTicksStr, false);
+
+        // Draw Function Line
+        if (f && curvePoints.length > 0) {
+            let d = curvePoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${scaleX(p.x)} ${scaleY(p.y)}`).join(' ');
+            path.setAttribute('d', d);
+            if (color) path.style.stroke = color;
+        }
+
+        // Draw Residuals and Scattered Points
+        scatteredPoints.forEach(p => {
+            const px = scaleX(p.x);
+            const py = scaleY(p.y);
+
+            if (f && showResiduals) {
+                const lineY = scaleY(f(p.x));
+                const resLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                resLine.setAttribute("x1", px);
+                resLine.setAttribute("y1", py);
+                resLine.setAttribute("x2", px);
+                resLine.setAttribute("y2", lineY);
+                resLine.classList.add("mini-graph-residual-line");
+                residualsGroup.appendChild(resLine);
+            }
+
+            const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            c.setAttribute("cx", px);
+            c.setAttribute("cy", py);
+            c.setAttribute("r", "4");
+            c.classList.add("mini-graph-point");
+            dataPointsGroup.appendChild(c);
+        });
 
         // Interaction
         wrapper.addEventListener('mousemove', (e) => {
             const rect = wrapper.getBoundingClientRect();
             const mouseX = e.clientX - rect.left;
-            const xPercent = mouseX / rect.width;
-            const xVal = minX + xPercent * (maxX - minX);
+            const xVal = minX + (mouseX / rect.width) * (maxX - minX);
 
-            if (points.length === 0) return;
-            // Find closest data point
-            let closest = points[0];
-            let minDist = Math.abs(points[0].x - xVal);
-            points.forEach(p => {
-                const dist = Math.abs(p.x - xVal);
-                if (dist < minDist) {
-                    minDist = dist;
-                    closest = p;
-                }
-            });
+            let displayX, displayY;
 
-            const px = scaleX(closest.x);
-            const py = scaleY(closest.y);
+            if (curvePoints.length > 0) {
+                // Find closest on curve
+                let closest = curvePoints[0];
+                let minDist = Math.abs(curvePoints[0].x - xVal);
+                curvePoints.forEach(p => {
+                    const dist = Math.abs(p.x - xVal);
+                    if (dist < minDist) { minDist = dist; closest = p; }
+                });
+                displayX = closest.x;
+                displayY = closest.y;
+            } else if (scatteredPoints.length > 0) {
+                // Find closest scattered point
+                let closest = scatteredPoints[0];
+                let minDist = Math.abs(scatteredPoints[0].x - xVal);
+                scatteredPoints.forEach(p => {
+                    const dist = Math.abs(p.x - xVal);
+                    if (dist < minDist) { minDist = dist; closest = p; }
+                });
+                displayX = closest.x;
+                displayY = closest.y;
+            } else return;
 
-            point.setAttribute('cx', px);
-            point.setAttribute('cy', py);
-            point.style.display = 'block';
+            const px = scaleX(displayX);
+            const py = scaleY(displayY);
+
+            hoverPoint.setAttribute('cx', px);
+            hoverPoint.setAttribute('cy', py);
+            hoverPoint.style.display = 'block';
 
             tooltip.style.opacity = '1';
             tooltip.style.left = `${(px / 400) * 100}%`;
             tooltip.style.top = `${(py / 200) * 100}%`;
-            tooltip.innerHTML = `x: ${closest.x.toFixed(2)}<br>y: ${closest.y.toFixed(3)}`;
+            tooltip.innerHTML = `x: ${displayX.toFixed(2)}<br>y: ${displayY.toFixed(2)}`;
         });
 
         wrapper.addEventListener('mouseleave', () => {
-            point.style.display = 'none';
+            hoverPoint.style.display = 'none';
             tooltip.style.opacity = '0';
         });
     });

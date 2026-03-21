@@ -763,6 +763,13 @@ pre[class*="language-"] {
     opacity: 0.3;
 }
 
+.mini-graph-residual-line {
+    stroke: var(--accent-secondary, #10b981);
+    stroke-width: 1.5;
+    stroke-dasharray: 2 2;
+    opacity: 0.6;
+}
+
 .mini-graph-tick-x {
     position: absolute;
     top: 5px;

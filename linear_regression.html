@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LR | brute.ai</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/theme.css?v=2">
+    <link rel="stylesheet" href="css/style.css?v=2">
+
+    <!-- MathJax/KaTeX -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+    <!-- Prism.js -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+
+    <!-- Theme Logic -->
+    <script src="js/theme.js"></script>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="nav-logo">
+                brute.ai
+            </a>
+            <div class="nav-links">
+                <a href="../index.html" class="nav-link">Home</a>
+                <a href="../about.html" class="nav-link">About</a>
+                <button id="theme-toggle" class="theme-toggle">
+                    <i data-lucide="moon"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <header style="margin: 3rem 0;">
+            <p
+                style="color: var(--accent-primary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
+                <a href="../index.html">Fundamental ML Series</a>
+            </p>
+            <h1>Linear Regression</h1>
+            <!-- <p style="color: var(--text-muted);">March 2024 • 15 min read</p> -->
+        </header>
+
+        <section>
+            <!-- <div class="table-of-contents"></div> -->
+
+            <p>
+                Let's start our machine learning journey from this. This is the stepping stone or the early ideas of
+                Machine learning. Simple as it sounds and ancestor of mathemtical foundations in ML.
+                <br><br>
+                <em>
+                    <strong>In Linear Regression, a dependent variable $y$ is associatetd with set of independent
+                        variables
+                        $(x_1, x_2, ..., x_d)$ via a linear predictor function.</strong>
+                </em>
+                <br><br>
+                <strong>For example</strong>, let's take a popular housing price problem. So, we have a bunch of data
+                points of house
+                prices. Say, we know different properties of houses (<em>In ML term, we call them features or
+                    attributes</em>). The features are area, number of bedrooms, kitchen size, garden, is parking
+                available, location of house and so on. And we know the prices as well. So, typically the problem is
+                given so many data points of house features and price, can we create a predictor function which can
+                predict price for a new house given all the necesary features.
+                <br>
+                If we try to fit a linear function through the features, it will be a problem of <strong>Linear
+                    Regression</strong>.
+            </p>
+
+
+
+            <h2>
+                <span class="highlight-maths">Maths:</span>
+                Foundation of Linear Regression
+            </h2>
+
+            Let's define each term carefully. We assume to start with the housing price problem only. So, to make each
+            prediction say we know $d$ different things about the house. Or in other words, our <strong>number of
+                features are $d$</strong>.
+
+            <div class="math-block plain">
+                $$X = \begin{bmatrix}
+                x_0 \\
+                x_1 \\
+                \vdots \\
+                x_{d-1}
+                \end{bmatrix}_{d \times 1}$$
+            </div>
+
+            So, our each independent variable matrix is like $X$. To compare with our example problem, $x_0$, $x_1$ are
+            here bedroom size, area and so on. Now, we are trying to fit a linear function through the features. So, our
+            predictor function is,
+
+            <div class="math-block plain">
+                $$\begin{align*}
+                y = f_w(x) + \epsilon
+                \end{align*}$$
+            </div>
+
+            Here $f_w(x) = w_0 + w_1x_1 + w_2x_2 + ... + w_dx_d$. $w_i$ is the weight associated with $i$-th feature
+            (Also known as <em>parameter</em>).
+            $\epsilon$ is the irreducible error term (we
+            will go into this in details later). So, in matrix form $W$ is
+
+            <div class="math-block plain">
+                $$W = \begin{bmatrix}
+                w_0 \\
+                w_1 \\
+                \vdots \\
+                w_{d-1}
+                \end{bmatrix}_{d \times 1}$$
+            </div>
+
+
+            <h2>
+                <span class="highlight-example">Pricing Again?</span>
+            </h2>
+
+
+            <section class="references-section">
+                <h2>References & Further Reading</h2>
+                <ol class="references-list">
+                    <li>Trees <a
+                            href="https://www.cse.iitd.ac.in/~mausam/courses/col106/autumn2017/lectures/07-trees.pdf">IIT
+                            Delhi Notes</a> </li>
+                    <li>A very <strong>visualizing realistic</strong> way of learning about DT <a
+                            href="https://mlu-explain.github.io/decision-tree/">MLU Explain</a></li>
+                    <li>Decision Trees <a
+                            href="https://www.cs.toronto.edu/~axgao/cs486686_f21/lecture_notes/Lecture_07_on_Decision_Trees.pdf">University
+                            of Toronto Notes</a></li>
+
+                </ol>
+            </section>
+        </section>
+    </main>
+
+    <footer class="full-footer"></footer>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="js/main.js"></script>
+</body>
+
+</html>
