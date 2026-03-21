@@ -51,7 +51,7 @@
         </header>
 
         <section>
-            <!-- <div class="table-of-contents"></div> -->
+            <div class="table-of-contents"></div>
 
             <p>
                 Let's start our machine learning journey from this. This is the stepping stone or the early ideas of
@@ -78,7 +78,7 @@
 
 
             <h2>
-                <span class="highlight-maths">Maths:</span>
+                <span class="highlight-intuition">Intuition:</span>
                 Foundation of Linear Regression
             </h2>
 
@@ -123,20 +123,466 @@
             <h2>
                 <span class="highlight-example">Pricing Again?</span>
             </h2>
+            In the following example, we are trying to predict Rikshan price per distance travelled. The $x$ values are
+            distance travelled (only one feature) and dependetent predicted variables are $y$. We plot the data points
+            and try to predict the ideal linear function to fit that data. Now for example, we assume the ideal function
+            is,
+
+            <div class="math-block plain">
+                $$\begin{align*}
+                y = w_0 + w_1x
+                \end{align*}$$
+            </div>
+
+
+
+
+            <div class="mini-graph" data-title="Linear Regression: Riksha Price" data-function="x => x + 2"
+                data-points="0,1.4; 1,3.9; 2,3.2; 3,5.5; 4,4.8; 5,7.2" data-show-residuals="true" data-min="0"
+                data-max="5" data-x-title="Distance travelled (x)" data-y-title="Price (y)" data-hover-tooltip="false"
+                data-color="#6366f1" data-width="100%" data-height="90%" style="width: 60%; margin: 2rem auto;">
+            </div>
+
+            Now, if we look at the graph, the fit looks more or less correct. We don't if it's the best fit
+            mathematically yet. Speaking in mathematics, we can think there are infinitely many combinations of $(w_0,
+            w_1)$, which leads to inifinitely many possible straight lines to fit. So, to find the mathematically most
+            accurate one, we need an <strong>objective function</strong> to reduce the cost of fit. Let's look into that
+            in next part.
+            <br><br>
+            But to suffice current goal of this exmaple, it looks a good fit and for a complete new data point of
+            distance we need to travel, we can find the $y$ value corresponding to that $x$ and assume that's closest
+            possible prediction to the actual price we have to pay.
+
+
+            <h2>
+                <span class="highlight-maths">More Maths?</span> Ughhh!
+            </h2>
+
+            <strong>
+                A linear prediction model in the ways we define, means any non-linear transformation of the independent
+                variable are also permitted.
+            </strong>
+            <br> <br>
+            So, $y = w_0 + w_1x + w_2x^2 + w_3 + x^3 + ... + w_kx^k$ is still linear predictor.
+            To understand better please go through <strong>Linear & Non-Linear Transformations</strong> (ref 1)
+
+
+
+            <h3>
+                <span class="highlight">Irreducible Error</span>
+            </h3>
+
+            <p>
+                If two variables are probabilistically related, then for a fixed value $x$, there is uncertainty in the
+                value of the second variable.
+                <br><br>
+                We assume the uncertainty as,
+            <div class="math-block plain">
+                $$
+                \begin{align*}
+                y = w_0 + w_1x + \epsilon
+                \end{align*}
+                $$
+            </div>
+            <strong>$\epsilon$ is a random variable representing irreducible error</strong>. Two variables $(y, x)$ are
+            related linearly
+            'on average' if fr fixed $x$ the actual value of $y$ differs from its expected value by a random amount
+            (<strong>random error</strong>).
+
+            <div class="math-block plain">
+                $$E(\epsilon) = 0$$
+                $$V(\epsilon) = \sigma^2$$
+            </div>
+            </p>
+
+
+            <div class="side-by-side ratio-1-2 align-start">
+                <div>
+                    <p>
+                        The errors are distributed about the <strong>ideal regression line</strong>. Hence, mean is
+                        considered to be $0$.
+                    <div class="math-block plain">
+                        $$
+                        \begin{align*}
+                        E(\epsilon) = \sum_{i} e_i = 0
+                        \end{align*}
+                        $$
+                        $$
+                        \begin{align*}
+                        V(\epsilon) = \sum_{i} e_i^2 - \frac{(\sum_{i} e_i)^2}{n} = \sigma^2
+                        \end{align*}
+                        $$
+                    </div>
+                    </p>
+                </div>
+                <div class="side-content">
+                    <div class="mini-graph" data-function="x => x + 2"
+                        data-points="0,1.4; 1,3.9; 2,3.2; 3,5.5; 4,4.8; 5,7.2" data-show-residuals="true"
+                        data-residual-labels="true" data-min="0" data-max="5" data-x-title="Distance travelled (x)"
+                        data-y-title="Price (y)" data-hover-tooltip="false" data-color="#6366f1" data-width="100%"
+                        data-height="90%" style="width: 60%; margin: 2rem auto;">
+                    </div>
+                </div>
+            </div>
+
+            <strong>Remember, in Linear Regression we assume that the irreducible noise comes from a <em>Gaussion
+                    Distribution</em>.</strong>
+
+            <br>
+            <div class="callout callout-info">
+                If we think of an entire population of $(x, y)$ pairs then $\mu_{y/x^*}$ is the mean of all $y$ values
+                for
+                which $x=x^*$ and $\sigma_{y/x^*}$ is a measure of how much these values of $y$ spread out about the
+                mean
+                value.
+            </div>
+            <strong>How do we interpret $\sigma_{y/x^*}$?</strong><br><br>
+
+
+
+
+
+            <h3>
+                <span class="highlight">
+                    Homoscedasticity
+                </span>
+            </h3>
+
+            We assume the variance of the distribution of $y$ values to be the same at each different value of fixed
+            $x$ (Homogeneity of variance assumption). In other words, those residuals are not dependent on $x$ values.
+            They come from an independent <strong>Gaussian</strong> distribution with a constant variance $\sigma^2$.
+            <br><br>
+
+
+
+
+
+
+
+
+
+            <h3>
+                <span class="highlight">Error Function / Loss Function / Cost Function</span>
+            </h3>
+            <p>
+                We have already seen that to find out the most suitable fit, we need a cost function to optimise.
+                There
+                are different ways to define a cost function.
+                <br>
+                <strong>
+                    <em>
+                        The most common cost function is Least Squares Estimate.
+                    </em>
+                </strong>
+                <br>
+                Mathematically, we define MSE as folows. Let's assume we have a dataset $D$ with $n$ data points.
+                <br><br>
+                $L = \sum_{(x_i,y_i \in D)} (y_i - f_w(x_i))^2$
+                <br><br>
+                We use this the most because it's easy to differentiate and optimise. Let's see how in later parts.
+
+                <br><br>Next one is
+                <strong>
+                    <em>
+                        Least Absolute Deviation Estimate.
+                    </em>
+                </strong>
+                <br><br>
+                $L = \sum_{(x_i,y_i \in D)} |y_i - f_w(x_i)|$
+                <br><br>
+                <strong>
+                    <em>
+                        Mean Squared Logarithmic Error.
+                    </em>
+                </strong>
+                <br><br>
+                $L = \sum_{(x_i,y_i \in D)} (\log(y_i) - \log(f_w(x_i)))^2$
+            </p>
+            <br><br>
+
+
+            <h3> Some Basic Notations </h3>
+            $D = {(x_1,y_1), ..., (x_n,y_n)}$ -> Dataset<br>
+            $n$ = number of training examples<br>
+            $x_j$ = input or independent variables<br>
+            $y_j$ = output or dependent variables or target variables<br>
+            $(x_j, y_j)$ = specific examples ($j^{th}$ training example)<br><br>
+
+            $x_j = \begin{bmatrix}
+            x_j^1 \\
+            x_j^2 \\
+            \vdots \\
+            x_j^d
+            \end{bmatrix}_{d \times 1}$
+
+            $X = \begin{bmatrix}
+            x_1^T \\
+            x_2^T \\
+            \vdots \\
+            x_n^T
+            \end{bmatrix}_{n \times d}$
+
+            $Y = \begin{bmatrix}
+            y_1 \\
+            y_2 \\
+            \vdots \\
+            y_n
+            \end{bmatrix}_{n \times 1}$
+            <br><br><br>
+
+
+
+            <h3>
+                <span class="highlight">
+                    General Regression Problem
+                </span>
+            </h3>
+            <em>
+                <strong>
+                    Determine a function $f^*$ such that $f^*(x)$ is the best predictor for y, w.r.t. D.
+                </strong>
+            </em>
+            <div class="math-block plain">
+                $$f^* = \arg\min_{f \in \mathcal{F}} E(f, D)$$
+            </div>
+            Here, $F$ denotes the class of functions over which error minimization is performed. $D$ is set of data
+            points.
+            <br><br>
+
+            <h3>
+                <span class="highlight">
+                    Parameterized Regression Problem
+                </span>
+            </h3>
+            Need to determine parameters $w$ for the function $f(x, w)$ which minimizes our error function $E(f(w, x),
+            D)$.
+            <div class="math-block plain">
+                $$w^* = \arg\min_{w} E(f(w, x), D)$$
+                $$w^* = \arg\min_{w} \sum_{n} (y_i - w^Tx_i)^2$$
+            </div>
+            Now, for current scenario, we will begin with the most widely used loss function.
+            <br><br>
+
+
+
+
+            <h3>
+                <span class="highlight">
+                    Closed Form Solution for 1D Data
+                </span>
+            </h3>
+            - With the statement that <em>Least Square Function</em> is a <strong>Convex Function</strong> (ref) we can
+            move ahead.
+            <br>
+            - Our goal is to find the minimal cost of our cost function.
+            <br>
+            - Which is the optima of this function.
+
+            <div id="convex-3d-plot"
+                style="width: 100%; max-width: 600px; height: 500px; margin: 2rem auto; overflow: hidden;">
+            </div>
+
+            This is a typical convex function of cost in linear regression. And our goal is to find that global minima
+            as our ideal solution.
+
+            <div class="math-block plain">
+                $$\begin{align*}
+                w_0^*, w_1^* = \arg\min_{w_0, w_1} \sum_{n} (y_i - f(x_i))^2 \\
+                w_0^*, w_1^* = \arg\min_{w_0, w_1} \sum_{n} (y_i - w_0 - w_1x_i)^2
+                \end{align*}$$
+            </div>
+
+            So, we'll find $w_0^*$, $w_1^*$, when $$
+            \frac{\partial}{\partial w_0} E = 0$$
+            $$
+            \frac{\partial}{\partial w_1} E = 0
+            $$
+
+            <strong>Let's solve for it.</strong>
+            <br><br>
+
+            <h4>Case 1:</h4>
+            <div class="math-block plain">
+                $$
+                \begin{align*}
+                \frac{\partial}{\partial w_0} E(w_0, w_1, D) = 0 \\
+                or, \frac{\partial}{\partial w_0} \sum_{i=1}^{n} (y_i - w_0 - w_1x_i)^2 = 0\\
+                or, -2\sum_{i=1}^{n} (y_i - w_0 - w_1x_i) = 0\\
+                or, nw_0 + w_1\sum_{i} x_i = \sum_{i} y_i \quad \cdots (A)
+                \end{align*}
+                $$
+            </div>
+
+
+            <h4>Case 2:</h4>
+            <div class="math-block plain">
+                $$
+                \begin{align*}
+                \frac{\partial}{\partial w_1} \sum_{i=1}^{n} (y_i - w_0 - w_1x_i)^2 = 0\\
+                or, -2\sum_{i=1}^{n} (y_i - w_0 - w_1x_i)x_i = 0\\
+                or, w_0\sum_{i} x_i + w_1\sum_{i} x_i^2 = \sum_{i} x_iy_i \quad \cdots (B)
+                \end{align*}
+                $$
+            </div>
+
+            So from $A$, we can find,
+            <div class="math-block plain">
+                $$
+                \begin{align*}
+                w_0^* = \frac{\sum y_i - w_1^*\sum x_i}{n} = \bar{Y} - w_1^*\bar{X} \quad \cdots (C)
+
+                \end{align*}
+                $$
+            </div>
+
+            Substituting $w_0^*$ in $B$, we can find,
+            <div class="math-block plain">
+                $$
+                \begin{align*}
+                w_1^* = \frac{\sum_{i} x_iy_i - w_0^*\sum_{i} x_i}{\sum_{i} x_i^2}\\
+                w_1^* = \frac{\frac{\sum_{i}x_iy_i}{n} - \bar{X}\bar{Y}}{\frac{\sum_{i}x_i^2}{n} - \bar{X}^2} \quad
+                \cdots (D)
+                \end{align*}
+                $$
+            </div>
+
+            <strong>Moving further</strong>, In matrix form,
+
+            <div class="math-block plain">
+                $$\begin{align*}
+                E^* = \arg\min_{w} \sum_{i} (y_i - w^Tx_i)^2\\
+                or, \nabla_{w}E =\sum_{i} -2x_i (y_i - w^Tx_i) = 0\\
+                or, -2\sum_{i}x_iy_i + 2\sum_{i}x_i^2w^T = 0\\
+                or, \nabla_wE = -2X^TY + 2X^TXw = 0\\
+                or, X^TXw = X^TY\\
+                or, \mathbf{\color{#2a51fa}w^* = (X^TX)^{-1}X^TY} \quad \cdots (E)
+                \end{align*}$$
+            </div>
+
+            <strong>
+                $X^TX$ is guranteed to be invertible if $X$ is a column vector.
+            </strong>
+            <br><br>
+            Here,
+            $\nabla_{w}E = \begin{bmatrix}
+            \frac{\partial E}{\partial w_0} \\
+            \frac{\partial E}{\partial w_1} \\
+            \vdots \\
+            \frac{\partial E}{\partial w_{d-1}}
+            \end{bmatrix}_{d \times 1}$
+            <br>
+            To understand better about matrix operations about differentiation, please read up.
+            <br><br>
+
+
+
+
+
+            <h3>
+                <span class="highlight">
+                    Let's Revisit Least Squares
+                </span>
+            </h3>
+            Let's try to re-do the closed form from a matrix perspective to get a better view of dimensionality and
+            data.
+            <br><br>
+            Given a training data, we design matrix $X$ as an $(n \times d)$ matrix. And $Y$ is the $n$ dimensional
+            target value vector.
+            <br><br>
+            $X = \begin{bmatrix}
+            \cdots (x_1)^T \cdots \\
+            \cdots (x_2)^T \cdots \\
+            \vdots \\
+            \cdots (x_n)^T \cdots
+            \end{bmatrix}_{n \times d}$
+
+            $Y = \begin{bmatrix}
+            y_1 \\
+            y_2 \\
+            \vdots \\
+            y_n
+            \end{bmatrix}_{n \times 1}$
+            <br><br>
+            $w$ is the weight vector along with bias factor. And $X$ has the unit term to get bias.
+            <br><br>
+            $E(x_i) = (x_i)^T w$
+            <br><br>
+            $E(X) = Xw$
+            <br><br>
+            $XW-\bar{Y} = \begin{bmatrix}
+            (x_1)^T w - y_1 \\
+            (x_2)^T w - y_2 \\
+            \vdots \\
+            (x_n)^T w - y_n
+            \end{bmatrix}_{n \times 1}$
+            <br><br>
+
+            We know that for a vector $Z$, $Z^TZ = \sum_{i} z_i^2$.
+            <br><br>
+            $$
+            \begin{align*}
+            \frac{1}{2}(XW-\bar{Y})^T(XW-\bar{Y}) = L(w)\\
+            = \frac{1}{2}\sum_{i}(E(x_i,w)-y_i)^2
+            \end{align*}
+            $$
+            We define this $L(w)$ as our <strong>Cost Function</strong>.
+
+            <br><br>
+            Now, we minimize $L$, differentiate w.r.t. $W$.
+
+            <div class="math-block plain">
+                $$
+                \begin{align*}
+                \nabla_w L(w) = \nabla_{w} \frac{1}{2} (XW-Y)^T (XW-Y) \\
+                = \frac{1}{2} \nabla_{w} \big((XW)^T(XW) - (XW)^T\bar{Y}\\ - \bar{Y}^T(XW) + \bar{Y}^T\bar{Y}\big)\\
+                = \frac{1}{2} \nabla_{w} \big(W^T(X^TX)W - W^TX^T\bar{Y}\\ - \bar{Y}^TXW + \bar{Y}^T\bar{Y}\big)\\
+                = \frac{1}{2} \big(W^T(X^TX)W - 2(X^T\bar{Y})^TW\big)\\
+                \end{align*}
+                $$
+            </div>
+            Now, we know that $\nabla_{x}b^Tx = b$ and $\nabla_{x}x^TAx = 2Ax$ for a <strong>symmetric</strong> matrix
+            $A$.
+            <br>
+            Also, to minimize this, we must have $\nabla_{w}L(w) = 0$. Hence,
+            $$
+            \begin{align*}
+            X^TXW = X^T\bar{Y}\\
+            \mathbf{\color{#2a51fa}W = (X^TX)^{-1}X^T\bar{Y}}
+            \end{align*}
+            $$
+            <br>
+            <strong>In this way, we also verified our closed form solutions from both the ways.</strong>
+            <br><br>
+
+
+
+
+
+
+
+
+            <h2>
+                <span class="highlight-maths">
+                    Probabilistic Interpretation
+                </span>
+            </h2>
+            Let us assume the target variables and the inputs
+
+
+
+
+
+
 
 
             <section class="references-section">
                 <h2>References & Further Reading</h2>
                 <ol class="references-list">
-                    <li>Trees <a
-                            href="https://www.cse.iitd.ac.in/~mausam/courses/col106/autumn2017/lectures/07-trees.pdf">IIT
-                            Delhi Notes</a> </li>
-                    <li>A very <strong>visualizing realistic</strong> way of learning about DT <a
-                            href="https://mlu-explain.github.io/decision-tree/">MLU Explain</a></li>
-                    <li>Decision Trees <a
-                            href="https://www.cs.toronto.edu/~axgao/cs486686_f21/lecture_notes/Lecture_07_on_Decision_Trees.pdf">University
-                            of Toronto Notes</a></li>
+                    <li>Linear Transformation: <a href="https://www.youtube.com/watch?v=kYB8IZa5AuE">
+                            3B1B Video</a> </li>
 
+                    <li>Convex Function</li>
+                    <li>Matrix Derivatives</li>
                 </ol>
             </section>
         </section>
@@ -146,6 +592,7 @@
 
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
     <script src="js/main.js"></script>
 </body>
 

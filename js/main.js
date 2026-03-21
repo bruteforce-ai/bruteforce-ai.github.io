@@ -178,6 +178,8 @@ function initMiniGraphs() {
         const widthVal = container.getAttribute('data-width') || '100%';
         const pointsStr = container.getAttribute('data-points') || '';
         const showResiduals = container.getAttribute('data-show-residuals') === 'true';
+        const showResidualLabels = container.getAttribute('data-residual-labels') === 'true';
+        const showHoverTooltip = container.getAttribute('data-hover-tooltip') !== 'false';
 
         // Setup Container
         container.classList.add('mini-graph-container');
@@ -192,7 +194,7 @@ function initMiniGraphs() {
             <div style="display: grid; grid-template-areas: '${yTitle ? 'title-y' : ''} labels-y svg' '. . labels-x' '. . title-x'; grid-template-columns: ${yTitle ? 'auto' : '0px'} auto 1fr; grid-template-rows: ${heightVal} auto auto; width: ${widthVal}; max-width: 100%; gap: 0px 8px;">
                 ${yTitleDiv}
                 <div class="mini-graph-y-axis-labels" style="grid-area: labels-y; position: relative; width: 35px;"></div>
-                <div class="mini-graph-svg-wrapper" style="grid-area: svg; position: relative; cursor: crosshair;">
+                <div class="mini-graph-svg-wrapper" style="grid-area: svg; position: relative; cursor: ${showHoverTooltip ? 'crosshair' : 'default'};">
                     <div class="mini-graph-tooltip"></div>
                     <svg class="mini-graph-svg" viewBox="0 0 400 200" preserveAspectRatio="none" style="width: 100%; height: 100%; overflow: visible; display: block;">
                         <defs>
@@ -322,7 +324,7 @@ function initMiniGraphs() {
         }
 
         // Draw Residuals and Scattered Points
-        scatteredPoints.forEach(p => {
+        scatteredPoints.forEach((p, idx) => {
             const px = scaleX(p.x);
             const py = scaleY(p.y);
 
@@ -335,6 +337,15 @@ function initMiniGraphs() {
                 resLine.setAttribute("y2", lineY);
                 resLine.classList.add("mini-graph-residual-line");
                 residualsGroup.appendChild(resLine);
+
+                if (showResidualLabels) {
+                    const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    label.setAttribute("x", px + 5);
+                    label.setAttribute("y", (py + lineY) / 2);
+                    label.textContent = `e${idx + 1}`;
+                    label.classList.add("mini-graph-residual-label");
+                    residualsGroup.appendChild(label);
+                }
             }
 
             const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
@@ -346,52 +357,108 @@ function initMiniGraphs() {
         });
 
         // Interaction
-        wrapper.addEventListener('mousemove', (e) => {
-            const rect = wrapper.getBoundingClientRect();
-            const mouseX = e.clientX - rect.left;
-            const xVal = minX + (mouseX / rect.width) * (maxX - minX);
+        if (showHoverTooltip) {
+            wrapper.addEventListener('mousemove', (e) => {
+                const rect = wrapper.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const xVal = minX + (mouseX / rect.width) * (maxX - minX);
 
-            let displayX, displayY;
+                let displayX, displayY;
 
-            if (curvePoints.length > 0) {
-                // Find closest on curve
-                let closest = curvePoints[0];
-                let minDist = Math.abs(curvePoints[0].x - xVal);
-                curvePoints.forEach(p => {
-                    const dist = Math.abs(p.x - xVal);
-                    if (dist < minDist) { minDist = dist; closest = p; }
-                });
-                displayX = closest.x;
-                displayY = closest.y;
-            } else if (scatteredPoints.length > 0) {
-                // Find closest scattered point
-                let closest = scatteredPoints[0];
-                let minDist = Math.abs(scatteredPoints[0].x - xVal);
-                scatteredPoints.forEach(p => {
-                    const dist = Math.abs(p.x - xVal);
-                    if (dist < minDist) { minDist = dist; closest = p; }
-                });
-                displayX = closest.x;
-                displayY = closest.y;
-            } else return;
+                if (curvePoints.length > 0) {
+                    // Find closest on curve
+                    let closest = curvePoints[0];
+                    let minDist = Math.abs(curvePoints[0].x - xVal);
+                    curvePoints.forEach(p => {
+                        const dist = Math.abs(p.x - xVal);
+                        if (dist < minDist) { minDist = dist; closest = p; }
+                    });
+                    displayX = closest.x;
+                    displayY = closest.y;
+                } else if (scatteredPoints.length > 0) {
+                    // Find closest scattered point
+                    let closest = scatteredPoints[0];
+                    let minDist = Math.abs(scatteredPoints[0].x - xVal);
+                    scatteredPoints.forEach(p => {
+                        const dist = Math.abs(p.x - xVal);
+                        if (dist < minDist) { minDist = dist; closest = p; }
+                    });
+                    displayX = closest.x;
+                    displayY = closest.y;
+                } else return;
 
-            const px = scaleX(displayX);
-            const py = scaleY(displayY);
+                const px = scaleX(displayX);
+                const py = scaleY(displayY);
 
-            hoverPoint.setAttribute('cx', px);
-            hoverPoint.setAttribute('cy', py);
-            hoverPoint.style.display = 'block';
+                hoverPoint.setAttribute('cx', px);
+                hoverPoint.setAttribute('cy', py);
+                hoverPoint.style.display = 'block';
 
-            tooltip.style.opacity = '1';
-            tooltip.style.left = `${(px / 400) * 100}%`;
-            tooltip.style.top = `${(py / 200) * 100}%`;
-            tooltip.innerHTML = `x: ${displayX.toFixed(2)}<br>y: ${displayY.toFixed(2)}`;
-        });
+                tooltip.style.opacity = '1';
+                tooltip.style.left = `${(px / 400) * 100}%`;
+                tooltip.style.top = `${(py / 200) * 100}%`;
+                tooltip.innerHTML = `x: ${displayX.toFixed(2)}<br>y: ${displayY.toFixed(2)}`;
+            });
 
-        wrapper.addEventListener('mouseleave', () => {
-            hoverPoint.style.display = 'none';
-            tooltip.style.opacity = '0';
-        });
+            wrapper.addEventListener('mouseleave', () => {
+                hoverPoint.style.display = 'none';
+                tooltip.style.opacity = '0';
+            });
+        }
     });
 }
 
+document.addEventListener('DOMContentLoaded', () => {
+    const plotDiv = document.getElementById('convex-3d-plot');
+    if (plotDiv) {
+        const size = 50;
+        const w = [], b = [], z = [];
+
+        for (let i = 0; i < size; i++) {
+            w.push(-20 + (40 * i / (size - 1)));
+            b.push(-20 + (40 * i / (size - 1)));
+        }
+
+        for (let i = 0; i < size; i++) {
+            const zRow = [];
+            for (let j = 0; j < size; j++) {
+                // J(w,b) = w^2 + b^2 (simplified bowl shape)
+                zRow.push(w[i] ** 2 + b[j] ** 2);
+            }
+            z.push(zRow);
+        }
+
+        const data = [{
+            z: z,
+            x: b,
+            y: w,
+            type: 'surface',
+            colorscale: 'Spectral',
+            showscale: false
+        }];
+
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const textColor = isDark ? '#e2e8f0' : '#1e293b';
+        const bgColor = isDark ? '#1e293b' : '#ffffff';
+
+        const layout = {
+            title: {
+                text: 'Squared Error Cost J(w, b)',
+                font: { color: textColor, family: 'Inter, sans-serif' }
+            },
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            plot_bgcolor: 'rgba(0,0,0,0)',
+            margin: { l: 0, r: 0, b: 0, t: 40 },
+            scene: {
+                xaxis: { title: 'b', color: textColor },
+                yaxis: { title: 'w', color: textColor },
+                zaxis: { title: 'Cost(w, b)', color: textColor },
+                camera: { eye: { x: 1.5, y: -1.5, z: 1.2 } }
+            }
+        };
+
+        const config = { responsive: true, displayModeBar: false };
+
+        Plotly.newPlot('convex-3d-plot', data, layout, config);
+    }
+});

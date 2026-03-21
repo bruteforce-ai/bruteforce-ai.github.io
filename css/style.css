@@ -770,6 +770,13 @@ pre[class*="language-"] {
     opacity: 0.6;
 }
 
+.mini-graph-residual-label {
+    font-size: 10px;
+    fill: var(--text-muted);
+    font-weight: 600;
+    pointer-events: none;
+}
+
 .mini-graph-tick-x {
     position: absolute;
     top: 5px;
@@ -910,11 +917,16 @@ pre[class*="language-"] {
     grid-template-columns: 1fr 2fr;
 }
 
+.side-by-side.ratio-1-3 {
+    grid-template-columns: 1fr 3fr;
+}
+
 @media (max-width: 768px) {
 
     .side-by-side.ratio-1-1,
     .side-by-side.ratio-2-1,
-    .side-by-side.ratio-1-2 {
+    .side-by-side.ratio-1-2,
+    .side-by-side.ratio-1-3 {
         grid-template-columns: 1fr;
     }
 

@@ -275,67 +275,11 @@ def scaled_dot_product_attention(q, k, v, mask=None):
             <p>For more than one parameter (e.g., weight $w$ and bias $b$), the cost function shapes into a 3D convex
                 bowl. The global minimum is at the lowest point of this surface.</p>
 
-            <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+
             <div id="convex-3d-plot"
                 style="width: 100%; max-width: 600px; height: 500px; margin: 2rem auto; border-radius: 1rem; overflow: hidden; box-shadow: var(--card-shadow); background: var(--bg-secondary);">
             </div>
 
-            <script>
-                document.addEventListener('DOMContentLoaded', () => {
-                    const plotDiv = document.getElementById('convex-3d-plot');
-                    if (plotDiv) {
-                        const size = 50;
-                        const w = [], b = [], z = [];
-
-                        for (let i = 0; i < size; i++) {
-                            w.push(-20 + (40 * i / (size - 1)));
-                            b.push(-20 + (40 * i / (size - 1)));
-                        }
-
-                        for (let i = 0; i < size; i++) {
-                            const zRow = [];
-                            for (let j = 0; j < size; j++) {
-                                // J(w,b) = w^2 + b^2 (simplified bowl shape)
-                                zRow.push(w[i] ** 2 + b[j] ** 2);
-                            }
-                            z.push(zRow);
-                        }
-
-                        const data = [{
-                            z: z,
-                            x: b,
-                            y: w,
-                            type: 'surface',
-                            colorscale: 'Spectral',
-                            showscale: false
-                        }];
-
-                        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-                        const textColor = isDark ? '#e2e8f0' : '#1e293b';
-                        const bgColor = isDark ? '#1e293b' : '#ffffff';
-
-                        const layout = {
-                            title: {
-                                text: 'Squared Error Cost J(w, b)',
-                                font: { color: textColor, family: 'Inter, sans-serif' }
-                            },
-                            paper_bgcolor: 'rgba(0,0,0,0)',
-                            plot_bgcolor: 'rgba(0,0,0,0)',
-                            margin: { l: 0, r: 0, b: 0, t: 40 },
-                            scene: {
-                                xaxis: { title: 'b', color: textColor },
-                                yaxis: { title: 'w', color: textColor },
-                                zaxis: { title: 'J(w, b)', color: textColor },
-                                camera: { eye: { x: 1.5, y: -1.5, z: 1.2 } }
-                            }
-                        };
-
-                        const config = { responsive: true, displayModeBar: false };
-
-                        Plotly.newPlot('convex-3d-plot', data, layout, config);
-                    }
-                });
-            </script>
 
             <h2>Embedded Study Material</h2>
             <p>Below is the embedded PDF document for this topic:</p>
@@ -374,6 +318,7 @@ def scaled_dot_product_attention(q, k, v, mask=None):
 
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
     <script src="js/main.js"></script>
 </body>
 
