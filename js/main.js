@@ -177,6 +177,8 @@ function initMiniGraphs() {
         const heightVal = container.getAttribute('data-height') || '300px';
         const widthVal = container.getAttribute('data-width') || '100%';
         const pointsStr = container.getAttribute('data-points') || '';
+        const vectorsStr = container.getAttribute('data-vectors') || '';
+        const dottedLinesStr = container.getAttribute('data-dotted-lines') || '';
         const showResiduals = container.getAttribute('data-show-residuals') === 'true';
         const showResidualLabels = container.getAttribute('data-residual-labels') === 'true';
         const showHoverTooltip = container.getAttribute('data-hover-tooltip') !== 'false';
@@ -202,6 +204,9 @@ function initMiniGraphs() {
                                 <stop offset="0%" style="stop-color:var(--accent-primary);stop-opacity:1" />
                                 <stop offset="100%" style="stop-color:var(--accent-secondary, #6366f1);stop-opacity:1" />
                             </linearGradient>
+                            <marker id="arrowhead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                                <path d="M 0 0 L 6 3 L 0 6 z" fill="var(--accent-primary)" />
+                            </marker>
                         </defs>
                         <!-- Grid Lines -->
                         <line x1="0" y1="0" x2="0" y2="200" class="mini-graph-axis"/>
@@ -209,8 +214,10 @@ function initMiniGraphs() {
                         <line x1="0" y1="100" x2="400" y2="100" class="mini-graph-grid"/>
                         <line x1="200" y1="0" x2="200" y2="200" class="mini-graph-grid"/>
                         
+                        <g class="mini-graph-dotted-lines"></g>
                         <g class="mini-graph-residuals"></g>
                         <path class="mini-graph-path" d=""></path>
+                        <g class="mini-graph-vectors"></g>
                         <g class="mini-graph-data-points"></g>
                         <circle class="mini-graph-hover-point" r="5" style="display:none;"></circle>
                     </svg>
@@ -225,6 +232,8 @@ function initMiniGraphs() {
         const hoverPoint = container.querySelector('.mini-graph-hover-point');
         const dataPointsGroup = container.querySelector('.mini-graph-data-points');
         const residualsGroup = container.querySelector('.mini-graph-residuals');
+        const dottedLinesGroup = container.querySelector('.mini-graph-dotted-lines');
+        const vectorsGroup = container.querySelector('.mini-graph-vectors');
         const tooltip = container.querySelector('.mini-graph-tooltip');
         const wrapper = container.querySelector('.mini-graph-svg-wrapper');
         const xAxisLabels = container.querySelector('.mini-graph-x-axis-labels');
@@ -234,8 +243,8 @@ function initMiniGraphs() {
         let scatteredPoints = [];
         if (pointsStr) {
             scatteredPoints = pointsStr.split(';').map(p => {
-                const parts = p.trim().split(',').map(n => parseFloat(n));
-                return { x: parts[0], y: parts[1] };
+                const parts = p.trim().split(',');
+                return { x: parseFloat(parts[0]), y: parseFloat(parts[1]), label: parts[2] ? parts[2].trim() : null };
             }).filter(p => !isNaN(p.x) && !isNaN(p.y));
         }
 
@@ -354,7 +363,61 @@ function initMiniGraphs() {
             c.setAttribute("r", "4");
             c.classList.add("mini-graph-point");
             dataPointsGroup.appendChild(c);
+            if (p.label) {
+                const pLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                pLabel.setAttribute("x", px + 6);
+                pLabel.setAttribute("y", py - 6);
+                pLabel.textContent = p.label;
+                pLabel.classList.add("mini-graph-point-label");
+                dataPointsGroup.appendChild(pLabel);
+            }
         });
+
+        // Draw Dotted Lines
+        if (dottedLinesStr) {
+            dottedLinesStr.split(';').forEach(dl => {
+                const pts = dl.trim().split(',').map(n => parseFloat(n.trim()));
+                if (pts.length >= 4) {
+                    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                    line.setAttribute("x1", scaleX(pts[0]));
+                    line.setAttribute("y1", scaleY(pts[1]));
+                    line.setAttribute("x2", scaleX(pts[2]));
+                    line.setAttribute("y2", scaleY(pts[3]));
+                    line.classList.add("mini-graph-custom-dotted");
+                    dottedLinesGroup.appendChild(line);
+                }
+            });
+        }
+
+        // Draw Vectors
+        if (vectorsStr) {
+            vectorsStr.split(';').forEach(v => {
+                const parts = v.trim().split(',');
+                if (parts.length >= 4) {
+                    const x1 = parseFloat(parts[0]), y1 = parseFloat(parts[1]);
+                    const x2 = parseFloat(parts[2]), y2 = parseFloat(parts[3]);
+                    const labelText = parts[4] ? parts[4].trim() : '';
+
+                    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                    line.setAttribute("x1", scaleX(x1));
+                    line.setAttribute("y1", scaleY(y1));
+                    line.setAttribute("x2", scaleX(x2));
+                    line.setAttribute("y2", scaleY(y2));
+                    line.classList.add("mini-graph-vector-line");
+                    line.setAttribute("marker-end", "url(#arrowhead)");
+                    vectorsGroup.appendChild(line);
+
+                    if (labelText) {
+                        const lbl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                        lbl.setAttribute("x", scaleX(x2) + 5);
+                        lbl.setAttribute("y", scaleY(y2) - 5);
+                        lbl.textContent = labelText;
+                        lbl.classList.add("mini-graph-vector-label");
+                        vectorsGroup.appendChild(lbl);
+                    }
+                }
+            });
+        }
 
         // Interaction
         if (showHoverTooltip) {

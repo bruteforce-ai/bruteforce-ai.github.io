@@ -566,12 +566,237 @@
                     Probabilistic Interpretation
                 </span>
             </h2>
-            Let us assume the target variables and the inputs
+            Let us assume the target variables and the inputs are related via the equation, <br>
+            $$
+            y_i = w^Tx_i + \epsilon_i
+            $$
+            where $\epsilon_i$ is an error term that captures <em>unmodeled effects</em> or <em>random noise</em>.
+            <br>
+            <strong>Unmodeled Effect (Random Noise):</strong> Features that are not taken into account of regression but
+            seriously impacts the outputs.
+
+            <br>
+            Another assumption is that $\epsilon_i$ are <strong>independent and identically distributed
+                (i.i.d.)</strong> according to <strong>Gaussian distribution</strong> (normal) with mean $0$ and some
+            variance $\sigma^2$ (<em>Also called, imposing Gaussian Prior</em>).
+
+            $$
+            \epsilon_i \sim N(0, \sigma^2)
+            $$
+            <br>
+            Hence, the density of $\epsilon_i$ is given by,
+            <div class="math-block plain">
+                $$
+                p(\epsilon_i) = \frac{1}{\sqrt{2\pi\sigma^2}} exp({-\frac{\epsilon_i^2}{2\sigma^2}})\\
+                p(y_i|x_i,w) = \frac{1}{\sqrt{2\pi\sigma^2}} exp({-\frac{(y_i - w^Tx_i)^2}{2\sigma^2}})
+                $$
+            </div>
+
+
+            $p(y_i|x_i,w)$ means the distribution of $y_i$ given $x_i$ and parameterized by $w$. The question is, givem
+            $x$, $w$, what is the probability distribution of $y$?
+            <br>
+            We call it <strong>Likelihood</strong>.
+            <br>
+            Since, we have assumed $\epsilon$ to be independent,
+            <div class="math-block plain">
+                $$
+                p(y|x,w) = \prod_{i=1}^{n} p(y_i|x_i,w)\\
+                = \prod_{i=1}^{n} \frac{1}{\sqrt{2\pi\sigma^2}} exp({-\frac{(y_i - w^Tx_i)^2}{2\sigma^2}})\\
+                $$
+            </div>
+
+
+            Now to have a <em>best guess</em> for the parameter $w$, we have to maximize this likelihood.
+            Hence, this profound mathematical problem is known as, <span class="highlight"><strong>Maximum Likelihood
+                    Estimation</strong></span>.
 
 
 
 
 
+            <h3>
+                <span class="highlight">
+                    Maximum Likelihood Estimation
+                </span>
+            </h3>
+            Instead of maximizing likelihoodm we can maximize log likelihood ($LL(w)$).
+            $LL(w) = \log L(w)$.
+
+            <br>
+            <div class="math-block plain">
+                $$
+                \begin{align*}
+                LL(w) = \log \prod_{i=1}^{n} \frac{1}{\sqrt{2\pi\sigma^2}} exp({-\frac{(y_i - w^Tx_i)^2}{2\sigma^2}})\\
+                = \sum_{i=1}^{n} \log \frac{1}{\sqrt{2\pi\sigma^2}} exp({-\frac{(y_i - w^Tx_i)^2}{2\sigma^2}})\\
+                = n\log(\frac{1}{\sqrt{2\pi\sigma^2}}) - \frac{1}{2\sigma^2}\sum_{i=1}^{n}(y_i - w^Tx_i)^2\\
+                \mathbf{\color{#2a51fa}LL(w) = C_1 - C_2 \sum_{i=1}^{n}(y_i - w^Tx_i)^2}\\
+                \arg\max_{w} LL(w) = \arg\min_{w} \sum_{i=1}^{n}(y_i - w^Tx_i)^2
+                \end{align*}
+                $$
+            </div>
+            So, we can see that <strong>maximizing likelihood is equivalent to minimizing least square
+                function</strong>.
+
+            <br><br>
+
+            <h3> Geometric Interpretation</h3>
+            If $y$ is not in the column space of $X$ (i.e., if Zero is not attainable at $w^*$), what can be
+            done?<br><br>
+            - Let $y^*$ be a solution in the column space of $X$ <br>
+            - Least squares solution is such that, distance between $y^*$ and $y$ is minimal. <br>
+            - Therefore, line joining $y^*$ to $y$ to $y$ should be <strong>orthogonal to the column space</strong>.
+
+            <div class="mini-graph" data-min="0" data-max="7" data-points="4,3; 5,1; 6,0"
+                data-vectors="0,0,4,3,y*; 0,0,5,1,x2; 0,0,6,0,x1" data-dotted-lines="0,0,4.7,0.6; 4,3,4.7,0.6"
+                data-x-title=" " data-y-title=" " style="width: 70%; margin: 2rem auto;">
+            </div>
+
+            <div class="math-block plain">
+                $$
+                \begin{align*}
+                (y-y^*)^TX = 0\\
+                (y^*)^TX = (y^T)X
+                \end{align*}
+                $$
+            </div>
+
+
+            We know that, $XW^* = Y^*$. So,
+            <div class="math-block plain">
+                $$
+                \begin{align*}
+                (XW^*)^TX = (y^T)X \\
+                (W^*)^TX^TX = y^TX \\
+                X^TXW^* = X^TY \\
+                \mathbf{\color{#2a51fa}W^* = (X^TX)^{-1}X^TY}
+                \end{align*}
+                $$
+            </div>
+
+            So, we are back at the same point <strong>proving it again and again!</strong>
+            <br><br>
+
+
+
+
+            <h3>
+                <span class="highlight">
+                    Maximum Aposteriori Estimation (MAP)
+                </span>
+            </h3>
+            Suppose, we did five coin tosses and all comes as head. So, events are $\{H, H, H, H, H\}$. If we consider
+            this as our dataset, through <em>Maximum Likelihood</em>, can we say -<br>
+            1. MLE estimate $W_{MLE} = 1?$ Is tails improbable? <br>
+            2. Is there a way we could update our belief about the coin? (bayesian inference).
+
+            <br><br>
+            Here we bring in the idea of <span class="highlight"> <strong>Posterior Probability</strong></span>.
+            <br>
+            Posterior probabilty is how your beliefs change with the given observation!
+            <br><br>
+
+            Say, we believe that the coin is fair. <br><br>
+
+            <div class="callout callout-info">
+                <strong>Terms</strong><br>
+                $\theta =$ believing the coin to be fair (random variable) <br>
+                $D = $ our observations <br>
+                $p(\theta|D) = $ posterior probability <br>
+                $p(D) = $ prior probability <br>
+                $p(D|\theta) = $ likelihood <br>
+            </div>
+
+
+
+            <h4>The Bayesian Way</h4>
+            - Treat the parameters random and coming from a distribution. <br>
+            - Impose a prior distribution on the parameters, indicating one's prior belief. <br>
+            $$
+            p(\theta|D) = \frac{p(D|\theta)p(\theta)}{p(D)}
+            $$
+            - $D$ is pre-determined obserations here. So,
+            $$
+            p(\theta|D) \propto p(D|\theta)p(\theta)
+            $$
+            To get the <em>Maximum Aposteriori Estimate (MAP)</em>, we need to maximize the prior probability.
+            <div class="math-block plain">
+                $$
+                \begin{align*}
+                \theta_{MAP} = \arg\max_{\theta} p(D|\theta)p(\theta)\\
+                = \arg\max_{\theta} \log p(D|\theta) + \log p(\theta)\\
+                \end{align*}
+                $$
+            </div>
+
+            We can see the first part ($\log p(D|\theta)$) is the same as <strong>Maximum Likelihood
+                Estimation</strong>.
+            <br>
+            The second part ($\log p(\theta)$) is the prior probability.
+
+            <br>
+            In MAP, we have the term $\log p(w)$ extra. Hence,
+            <div class="callout callout-info">
+                <ul>
+                    <li>$MAP \to MLE$ when $\log p(w) \to 0$</li>
+                    <li>$MAP \to MLE$ when $w$ doesn't come from a separate distribution.</li>
+                    <li>$MAP \to MLE$ when $n \to \infty$ ($n$ is number of samples).</li>
+                </ul>
+            </div>
+
+
+
+
+
+            <h4>MAP Estimate for Linear Regression</h4>
+            Assume a Gaussian prior distribution over $w$,
+            <div class="math-block plain">
+                $$
+                p(w) = N(0, \frac{1}{\lambda} I)\\
+                = \frac{1}{(\frac{2\pi}{\lambda})^{d/2}} exp(-\frac{\lambda}{2} w^T w)\\
+                = (\frac{\lambda}{2\pi})^{d/2} exp(-\frac{\lambda}{2} ||w||_2^2)
+                $$
+            </div>
+
+
+            <h4>Multivariate Gaussian</h4>
+            <div class="math-block plain">
+                $$
+                N(\mu, \Sigma) = \frac{1}{(2\pi)^{d/2} |\Sigma|^{1/2}} exp(-\frac{(x-\mu)^T
+                (x-\mu)}{2\Sigma})
+                $$
+            </div>
+            MAP estimate maximizes the log posterior probab , $log p(w|x)$.
+
+            <div class="math-block plain">
+                $$
+                \begin{align*}
+                W_{MAP} = \arg\max_{w} log p(w) + \log p(x|W)\\
+                = \arg\max_{w} - \frac{\lambda}{2} ||w||_2^2 - \frac{1}{2\sigma^2} ||y-Xw||_2^2\\
+                = \arg\min_{w} \frac{1}{2} ||w||_2^2 + \frac{1}{2\sigma^2} ||y-Xw||_2^2\\
+                \mathbf{\color{#2a51fa}W_{MAP} = \arg\min_{w} \frac{1}{2\sigma^2} \sum_{j}(y_i-W^Tx_i)^2 +
+                \frac{\lambda}{2} ||w||_2^2}
+                \end{align*}
+                $$
+            </div>
+            You see, we are <strong>back at optimising <em>least square function</em></strong>. However, this time,
+            there is an additional term of $w$ at the end which we didn't need to optimise the last time.
+            <br><br>
+            Remember this equation for now or note down. This term is related to <strong>regularisation</strong> and we
+            will look at it at that chapter.
+
+            <br><br><br>
+            <h3>End Note!</h3>
+            Even though we did learn a lot of depth fundamentals about linear regression, we didn't really get to try
+            something in hand right? We didn't look at a data and try to fit a line or even got to know how to code!
+            <br><br>
+            Well may be that has something to do with the fact that we only learnt how to solve it on paper,
+            mathematically. But having so many features, that is not really the ideal way of machine learning. So, we
+            need to learn about <strong>Optimisation Algorithms</strong>, starting with <strong>Gradient
+                Descent</strong>.
+            <br>
+            And once, we know how to solve and find the minima and best fit curve iteratively, we will dive into trying
+            it out.
 
 
 
@@ -581,8 +806,21 @@
                     <li>Linear Transformation: <a href="https://www.youtube.com/watch?v=kYB8IZa5AuE">
                             3B1B Video</a> </li>
 
-                    <li>Convex Function</li>
-                    <li>Matrix Derivatives</li>
+                    <li>Convex Function <a
+                            href="https://www.princeton.edu/~aaa/Public/Teaching/ORF523/S16/ORF523_S16_Lec7_gh.pdf">Princeton
+                            Notes</a></li>
+                    <li>Matrix Derivatives: <a href="https://cs231n.stanford.edu/vecDerivs.pdf">Vector, Matrix and
+                            Tensor derivatives, Stanford</a></li>
+                    <li>Linear Regression: <a href="https://cs229.stanford.edu/lectures-spring2022/main_notes.pdf">CS229
+                            Lecture Notes, Stanford, Andrew NG, Tengyu Ma</a></li>
+                    <li>MLE <a
+                            href="https://web.stanford.edu/class/archive/cs/cs109/cs109.1202/lectureNotes/LN21_parameters_mle.pdf">Stanford
+                            Notes</a></li>
+                    <li>MAP <a
+                            href="https://web.stanford.edu/class/archive/cs/cs109/cs109.1202/lectureNotes/LN23_map.pdf">Stanford
+                            Notes</a></li>
+                    <li><a href="https://mml-book.github.io/book/mml-book.pdf">Mathematics for Machine Learning Book</a>
+
                 </ol>
             </section>
         </section>

@@ -777,6 +777,34 @@ pre[class*="language-"] {
     pointer-events: none;
 }
 
+.mini-graph-custom-dotted {
+    stroke: var(--text-secondary);
+    stroke-width: 1.5;
+    stroke-dasharray: 4 4;
+    opacity: 0.5;
+}
+
+.mini-graph-vector-line {
+    stroke: var(--accent-primary);
+    stroke-width: 2.5;
+    fill: none;
+    filter: drop-shadow(0 2px 4px rgba(99, 102, 241, 0.4));
+}
+
+.mini-graph-vector-label {
+    font-size: 11px;
+    fill: var(--accent-primary);
+    font-weight: 700;
+    pointer-events: none;
+}
+
+.mini-graph-point-label {
+    font-size: 11px;
+    fill: var(--text-primary);
+    font-weight: 600;
+    pointer-events: none;
+}
+
 .mini-graph-tick-x {
     position: absolute;
     top: 5px;
