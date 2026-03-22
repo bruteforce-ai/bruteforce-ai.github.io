@@ -362,6 +362,37 @@ pre[class*="language-"] {
     color: var(--accent-primary);
 }
 
+/* In Progress Topics */
+.topic-item.under_progress {
+    color: var(--text-muted);
+    opacity: 0.75;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+[data-theme="dark"] .topic-item.under_progress {
+    color: var(--text-muted);
+}
+
+.topic-item.under_progress::after {
+    content: 'WIP';
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    background-color: var(--bg-tertiary);
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
+    padding: 0.15rem 0.4rem;
+    border-radius: 0.3rem;
+    margin-left: auto;
+}
+
+.topic-item.under_progress:hover {
+    opacity: 1;
+    color: var(--text-secondary);
+}
+
 /* Featured Course Style (Minimal and Flexible) */
 .featured-section {
     margin: 2.5rem 0;
