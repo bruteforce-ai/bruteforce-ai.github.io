@@ -319,9 +319,9 @@ pre[class*="language-"] {
 /* Topic List Layout (Simplified & Compact) */
 .topic-list {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    /* grid-template-columns: repeat(2, 1fr); */
     /* Strict two column approach */
-    gap: 0.4rem 2.5rem;
+    gap: 0.4rem 0rem;
     margin-top: 0.5rem;
 }
 
@@ -365,7 +365,7 @@ pre[class*="language-"] {
 /* In Progress Topics */
 .topic-item.under_progress {
     color: var(--text-muted);
-    opacity: 0.75;
+    opacity: 0.5;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -386,6 +386,8 @@ pre[class*="language-"] {
     padding: 0.15rem 0.4rem;
     border-radius: 0.3rem;
     margin-left: auto;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .topic-item.under_progress:hover {
