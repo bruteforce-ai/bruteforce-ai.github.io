@@ -376,7 +376,7 @@ pre[class*="language-"] {
 }
 
 .topic-item.under_progress::after {
-    content: 'WIP';
+    content: 'Under Progress';
     font-size: 0.6rem;
     font-weight: 700;
     letter-spacing: 0.05em;
