@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GD | brute.ai</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/theme.css?v=2">
+    <link rel="stylesheet" href="css/style.css?v=2">
+
+    <!-- MathJax/KaTeX -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+    <!-- Prism.js -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+
+    <!-- Theme Logic -->
+    <script src="js/theme.js"></script>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="nav-logo">
+                brute.ai
+            </a>
+            <div class="nav-links">
+                <a href="../index.html" class="nav-link">Home</a>
+                <a href="../about.html" class="nav-link">About</a>
+                <button id="theme-toggle" class="theme-toggle">
+                    <i data-lucide="moon"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <header style="margin: 3rem 0;">
+            <p
+                style="color: var(--accent-primary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
+                <a href="../index.html">Fundamental ML Series</a>
+            </p>
+            <h1>Optimisation Algorithm: Gradient Descent</h1>
+            <!-- <p style="color: var(--text-muted);">March 2024 • 15 min read</p> -->
+        </header>
+
+        <section>
+            <div class="table-of-contents"></div>
+
+            <p>
+                In the previous section, we have seen that we can write the linear regression problem in the form of
+                minimising the cost function. So, the problem reduces to finding the minimum of the cost function. So,
+                we need to find the parameters $W$ such that the cost function is minimised.
+
+                <br><br>
+
+                Forget about mathematical or theoretical ways. The question is how do you computationally (iteratively)
+                find the minima in general. <strong>Why iteratively?</strong> Well because, <em>in this case of linear
+                    regression, we have a function which can be solved into a closed form</em>. But that is not the case
+                always.
+
+                <br><br>
+
+                So let's dive into the first and <strong>most fundamental</strong> optimisation algorithm, i.e.,
+                Gradient
+                Descent.
+            </p>
+
+
+            <h2>
+                <span class="highlight-example">
+                    Begining with an Example:</span>
+                Gradient Descent
+            </h2>
+
+            <p>
+                As the name suggested, the idea of this algorithm is to leverage <strong>gradient</strong> of the loss
+                function to find the optima. Let's dive into an intuitive simple case to grasp the overall concept.
+
+                <br><br>
+                Consider in our regression case, we just have one weight value. Hence, the complex multi-dimensional
+                hyperplane of loss function now essentially lands on the <strong>Cartesian plane</strong>. And since we
+                know the <strong>MSE</strong> loss function is convex, it looks like a <strong>parabola</strong> (bowl
+                shaped).
+
+                <br>
+                [Note: Often we use <strong>RMSE</strong> instead of MSE. But the shape remains the same. The 'R' in
+                RMSE stands
+                for 'Root'. So, we just take square root of MSE, it is good for scaling.]
+
+                <br><br>
+                Now consider mimicking the example, we find a loss function curve just like this. We are standing in the
+                point <strong>$(x_1, y_1)$</strong>. And we <strong>calculated the gradient of the function at that
+                    point</strong>, which turns out to be $m$ (let's say). Our genuine curiosity makes us wonder
+                <strong>what does this gradient geometrically represent?</strong>
+            </p>
+
+
+            <div class="mini-graph" data-title="Cost Function Bowl" data-function="x => Math.pow((x-198)/12, 2) + 62"
+                data-points="133,91, (x₁, y₁)" data-show-residuals="false" data-min="100" data-max="300"
+                data-x-title="Weight Parameter (w)" data-y-title="Cost Function (J)" data-hover-tooltip="true"
+                data-color="#6366f1" data-width="100%" data-height="90%" data-dotted-lines="78,138,175,53"
+                style="width: 60%; margin: 2rem auto;">
+            </div>
+
+            <p>
+                Considering the picture above, the gradient represents nothing but slope the curvature at that point and
+                more importantly, <strong>if the gradient is positive, it means the function is increasing at that
+                    point and vice versa</strong>.
+
+                <br><br>
+                What <em>Gradient Descent</em> tells us, is to take a step forward if the function is decreasing,
+                evidently that will take us closer to the minima and vice versa.
+            </p>
+
+
+            <h2>
+                <span class="highlight-intuition">
+                    The Algorithm
+                </span>
+            </h2>
+
+            <p>
+                After enough <strong>trash talk</strong>, I'm guessing we are ready to <span class="highlight">get
+                    real</span>!
+                <br><br>
+                <strong>The step by step algorithm</strong>:
+                <br>
+
+            <ul>
+                <li>Let's use some search algorithm that starts with an initial guess.</li>
+                <li>Our goal is to find a $w^*$ which points to the minima in the loss function plane.</li>
+                <li>If we starts with $w_0$, the loss function is $L(w)$.</li>
+                <li>Gradient of the function at this point is- $$\frac{\partial L(w)}{\partial w_0}$$</li>
+                <li>We want to move <strong>downhill</strong> to minima. So, move <span class="highlight">opposite of
+                        gradient</span>. (here $j$ represents $j^{th}$ dimension of weight). $$w^{(j)} = w^{(j)} - \eta
+                    \frac{\partial}{\partial w^{(j)}}L(w)$$</li>
+                <li>This update rule is followed every iteration to reach the minima. And $\eta$ here is the learning
+                    rate (a <span class="highlight">Hyperparameter</span>).</li>
+            </ul>
+
+            <br>
+            So, in simple words, we start at a random point, check gradient to find out which part of the curve we are
+            and take a step towards minima. Something like this.
+            </p>
+
+            <div class="mini-graph" data-function="x => Math.pow((x-3), 2) + 1"
+                data-points="1,5, w₀; 2.2,1.64, w₁; 2.68,1.10, w₂; 2.87,1.01, w₃"
+                data-vectors="1,5,2.2,1.64,; 2.2,1.64,2.68,1.10; 2.68,1.10,2.87,1.01" data-min="0" data-max="6"
+                data-y-title="Loss (J)" data-x-ticks="none" data-y-ticks="none" style="width: 70%; margin: 2rem auto;">
+            </div>
+
+            <h2>
+                <span class="highlight-maths">
+                    The Update Rule
+                </span>
+            </h2>
+
+            <p>
+                Now, <strong>let's talk maths</strong>. In terms of <em>linear regression</em> loss function, we can
+                deduce the update rule as follows.
+
+            <div class="math-block plain">
+                $$ \begin{align*}
+                \frac{\partial}{\partial w^{(j)}}L(w) &= \frac{\partial}{\partial w^{(j)}} \frac{1}{2} \big(E(w,x) -
+                y\big)^2\\
+                &= \frac{1}{2} \cdot 2 \big(E(w,x) - y\big) \cdot \frac{\partial}{\partial w^{(j)}}E(w,x)\\
+                &= \big(E(w,x) - y\big) \cdot \frac{\partial}{\partial w^{(j)}} \big(\sum_{i=0}^{d} w^{(i)} x^{(i)} -
+                y\big)\\
+                &= \big(E(w,x) - y\big) \cdot x^{(j)}\\
+                \end{align*} $$
+            </div>
+            For each dimension $j$, weight $w^{(j)}$ is updated as follows.
+
+            $$
+            w^{(j)} = w^{(j)} - \eta \big(E(w,x) - y\big) \cdot x^{(j)}
+            $$
+
+            This update rule is also called <span class="highlight">Widrow-Hoff Learning Rule</span>. The iterative way
+            is, we have to <strong>repeat untill convergence</strong>, or keep a <strong>threshold of
+                iterations</strong>.
+            </p>
+            <br>
+
+            <h3>Convergence Conditions</h3>
+            <p>
+                The way we look at typical convergence cases are like this.
+
+            <div class="math-block plain">
+                $$\begin{align*}
+                1. ||\nabla_w E(w)|| \le \epsilon \\
+                2. ||E(w_{t+1}) - E(w_t)|| \le \epsilon
+                \end{align*}$$
+            </div>
+
+            The first condition tells us that we can decide a <span class="highlight">threshold</span> for the gradient
+            and if it is smaller than that in a step, we can stop. And in the second approach, we can decide a similar
+            <strong>threshold</strong> for change in weight. In both cases, we can also decide a <strong>maximum number
+                of
+                iterations</strong> to stop the algorithm.
+            </p>
+
+
+
+
+
+
+            <h3>
+                <span class="highlight">
+                    Batch Gradient Descent
+                </span>
+            </h3>
+
+            <p>
+                In Batch Gradient Descent, we calculate the gradient of the loss function with respect to the weights
+                using whole dataset. By grouping the updates of the coordinates into an update vector. we can
+                write,
+
+                $$
+                w = w + \eta \sum_{i=1}^{n} \big(y_i - E(w, x_i)\big) \cdot x_i
+                $$
+                This is called <strong>Batch Gradient Descent</strong>. The Optimization problem we have for linear
+                regression, always converges to global minima as it is <strong>convex</strong>.
+
+                <br><br>
+                Instead of $n$ if we group through another parameter $B$ like this, the data points are divided into
+                batches of $B$.
+                $$
+                w = w + \eta \sum_{i=1}^{B} \big(y_i - E(w, x_i)\big) \cdot x_i
+                $$
+                It is called <span class="highlight">Mini Batch Gradient Descent</span> and $B$ is a Hyperparameter.
+            </p>
+
+
+
+            <h3>
+                <span class="highlight">
+                    Stochastic Gradient Descent
+                </span>
+            </h3>
+
+            <p>
+                If we update the weight according to loss in each training example, it's called <strong>Stochastic
+                    Gradient Descent</strong>.
+                <br><br>
+                $$w = w + \eta \big(y_i - E(w, x_i)\big) \cdot x_i$$
+
+            <div class="callout callout-info">
+                <strong>Why to use stochastic GD?</strong><br><br>
+
+                <ul>
+                    <li><strong>Computational Efficiency</strong>: Computing the gradient using the entire dataset can
+                        be computationally expensive, especially for large datasets. SGD allows for more frequent
+                        updates with lower computational cost.</li>
+                    <li><strong>Memory Efficiency</strong>: SGD requires less memory as it only needs to store the
+                        current training example and its gradient.</li>
+                    <li><strong>Faster Convergence</strong>: SGD can converge faster than batch GD for large datasets.
+                    </li>
+                    <li><strong>Simpler Implementation</strong>: SGD is simpler to implement than batch GD.</li>
+                    <li><strong>Online Learning</strong>: SGD can be used for online learning, where the model is
+                        updated
+                        as new data arrives.</li>
+                    <li><strong>Better for Non-Convex Functions</strong>: SGD can escape local minima in non-convex
+                        functions.</li>
+                    <li><strong>Less Prone to Local Minima</strong>: SGD's noisy updates can help it escape local
+                        minima.</li>
+                    <li><strong>Problem: Computationally Expensive</strong>: Computing the gradient using the entire
+                        dataset
+                        can be computationally expensive, especially for large datasets. SGD allows for more frequent
+                        updates with lower computational cost.</li>
+                </ul>
+            </div>
+
+            <br>
+            The contour plot in Stochastic GD looks like zigzag. Because, we are updating the weights according to loss
+            in
+            each training example.
+            <div style="text-align: center; width: 100%;">
+                <img src="assets/images/gradient_descent.png" alt="Stochastic GD"
+                    style="max-width: 100%; height: auto;">
+            </div>
+            In this image we can see the different of convergence of Batch GD and Stochastic GD.
+
+            </p>
+
+
+
+
+            <h1>
+                <span class="highlight-implementation">
+                    Gradient Descent in Code
+                </span>
+            </h1>
+
+            <p>
+                The best way to learn the tricks is to build from scratch. So, here is the script for that.
+            <pre class="language-python"><code>
+import numpy as np
+from sklearn.metrics import mean_squared_error
+
+
+# ── Gradient Descent from scratch (but using NumPy) ────────────────────────
+def gradient_descent(X, y, lr=0.01, epochs=1000):
+    n = len(y)
+    # Initialize weights and bias to zero
+    w = np.zeros((X.shape[1], 1))
+    b = 0.0
+    loss_history = []
+
+    for epoch in range(epochs):
+        # Forward pass — predictions
+        y_pred = X @ w + b                         # shape (n, 1)
+
+        # Compute MSE loss
+        loss = mean_squared_error(y, y_pred)
+        loss_history.append(loss)
+
+        # Compute gradients
+        dw = (1 / n) * X.T @ (y_pred - y)         # ∂L/∂w
+        db = (1 / n) * np.sum(y_pred - y)          # ∂L/∂b
+
+        # Update parameters
+        w -= lr * dw
+        b -= lr * db
+
+        if epoch % 100 == 0:
+            print(f"Epoch {epoch:>4} | Loss: {loss:.4f}")
+
+    return w, b, loss_history
+
+
+w, b, loss_history = gradient_descent(X, y, lr=0.1, epochs=500)
+
+
+                </code></pre>
+            <strong>Points to note:</strong>
+            <ul>
+                <li><strong>Learning Rate</strong>: $lr$, The learning rate is a hyperparameter that determines the step
+                    size
+                    of the gradient descent algorithm.</li>
+                <li><strong>Epochs</strong>: The number of epochs is the number of times the gradient descent algorithm
+                    is run.</li>
+                <li><strong>Loss</strong>: The loss is the mean squared error between the predicted values and the
+                    actual
+                    values.</li>
+                <li><strong>Gradient</strong>: The gradient is the partial derivative of the loss function with respect
+                    to
+                    the weights and bias.</li>
+                <li><strong>Update</strong>: The weights and bias are updated by subtracting the gradient multiplied by
+                    the
+                    learning rate.</li>
+            </ul>
+            </p>
+
+            <br><br>
+            <p>
+                But, we can do better. We can use <strong>PyTorch</strong> to do the same thing. It is one of the most
+                advanced libraries that is used in even building agents and llms.
+
+            <pre class="language-python"><code>
+# ── Same thing in 3 lines using PyTorch ───────────────────────────────────
+import torch
+import torch.nn as nn
+
+X_t = torch.tensor(X, dtype=torch.float32)
+y_t = torch.tensor(y, dtype=torch.float32)
+
+model     = nn.Linear(1, 1)
+optimizer = torch.optim.SGD(model.parameters(), lr=0.1)
+criterion = nn.MSELoss()
+
+torch_losses = []
+for epoch in range(500):
+    optimizer.zero_grad()
+    loss = criterion(model(X_t), y_t)
+    loss.backward()          # computes all gradients automatically
+    optimizer.step()         # w = w - lr * grad
+    torch_losses.append(loss.item())
+                </code>
+                </pre>
+
+            Here, we create one object of the class <strong>nn.Linear</strong>, which is a linear regression model.
+            <strong>torch.optim</strong> is another class providing bunch of optimisation algorithms. We just used the
+            SGD from there and passed our hyperparameters as arguments.
+            </p>
+
+            <br><br>
+
+            <h1>
+                <span class="highlight-intuition">More Optimisation</span>: RMSProp
+            </h1>
+
+            <p>
+                RMSProp (Root Mean Square Propagation) is another optimisation algorithm that is used to optimise the
+                weights and bias of a model. It is designed to address some of the <span
+                    class="highlight">limitations</span> of gradient descent, especially the problem of <span
+                    class="highlight">vanishing gradients</span>, non-convex functions. It is a modification of
+                gradient descent that uses a moving average of the squared gradients to scale the learning rate.
+            </p>
+
+
+            <h2>Update Rule</h2>
+
+            <p>
+                In each step, we calculate the gradient as usual $(\nabla_wJ(w))$, but don't update the weights
+                directly. Instead, we
+                update the weights by subtracting the gradient multiplied by the learning rate. But, we don't use the
+                same learning rate for all the weights. We use a different learning rate for each weight.
+
+            <div class="callout">
+                We keep an exponentially decaying average of squared gradients and use it to scale the learning rate.
+            </div>
+
+            $$
+            v_t = \beta v_{t-1} + (1-\beta)\nabla_w J(w) \\
+            $$
+
+            This is the decaying average and using it we update the weights like this:
+
+            $$
+            w_{t+1} = w_t - \frac{\eta}{\sqrt{v_t} + \epsilon} \nabla_w J(w)
+            $$
+
+            The plus point of using <span class="highlight">changing learning rate</span> is that the steps get smaller
+            when we reach closer to the minima. And it is much larger when we are far. Something like this:
+            <img src="assets/images/rmsprop.png" alt="RMSProp" style="width: 80%;">
+
+            <br>But it is not the only such modification.<br><br>
+            </p>
+
+
+            <h1>
+                <span class="highlight-intuition">
+                    Adam</span>: Adaptive Moment Estimation
+            </h1>
+
+            <p>
+                It combines ideas from both momentum optimization and RMSprop. Adam
+                adapts the learning rates for each parameter individually based on the historical gradients of those
+                parameters.
+
+            <h3>How it Works?</h3>
+            <br>
+            Similar to RMSProp, we calculate moments here but not just one. We have two moments. Our <span
+                class="highlight">first moment</span> is $m_t$ and the <span class="highlight">second moment</span> is
+            $v_t$. We see that, first moment is a decaying average of <strong>gradients</strong> and the second moment
+            is a decaying
+            average of <strong>squared gradients</strong>.
+            $$
+            m_t = \beta_1 m_{t-1} + (1-\beta_1)\nabla_w J(w) \\
+            v_t = \beta_2 v_{t-1} + (1-\beta_2)\nabla_w J(w)^2
+            $$
+
+            Now the update rule stands as,
+            $$
+            w_{t+1} = w_t - \frac{\eta}{\sqrt{v_t} + \epsilon} m_t
+            $$
+
+            In pratice, both of them suffice the same goal just one is more advanced than the other. We will see the
+            practical usecase of them soon.
+            </p>
+
+
+
+            <section class=" references-section">
+                <h2>References & Further Reading</h2>
+                <ol class="references-list">
+                    <li>Theoretical Explanation:
+                        <a href="https://www.cs.cmu.edu/afs/cs.cmu.edu/academic/class/15850-f20/www/notes/lec18.pdf">CMU
+                            Notes</a>
+                    </li>
+
+                    <li>
+                        A little hands on: <a
+                            href="https://coding-blocks.github.io/DS-NOTES/4.%20Gradient%20Descent.html">coding-blocks</a>
+                    </li>
+
+                    <li>RMSProp, Adam ++
+                        <a
+                            href="https://towardsdatascience.com/understanding-deep-learning-optimizers-momentum-adagrad-rmsprop-adam-e311e377e9c2/">TDS</a>
+                    </li>
+                </ol>
+            </section>
+        </section>
+    </main>
+
+    <footer class="full-footer"></footer>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+    <script src="js/main.js"></script>
+</body>
+
+</html>

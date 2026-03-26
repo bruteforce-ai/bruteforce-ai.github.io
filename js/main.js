@@ -244,7 +244,7 @@ function initMiniGraphs() {
         if (pointsStr) {
             scatteredPoints = pointsStr.split(';').map(p => {
                 const parts = p.trim().split(',');
-                return { x: parseFloat(parts[0]), y: parseFloat(parts[1]), label: parts[2] ? parts[2].trim() : null };
+                return { x: parseFloat(parts[0]), y: parseFloat(parts[1]), label: parts.length > 2 ? parts.slice(2).join(',').trim() : null };
             }).filter(p => !isNaN(p.x) && !isNaN(p.y));
         }
 
@@ -300,6 +300,10 @@ function initMiniGraphs() {
 
         // Render Ticks
         const drawTicks = (labels, ticksStr, isX) => {
+            if (ticksStr === 'none') {
+                labels.innerHTML = '';
+                return;
+            }
             let ticks = [];
             if (ticksStr) {
                 ticks = ticksStr.split(',').map(n => parseFloat(n.trim()));
