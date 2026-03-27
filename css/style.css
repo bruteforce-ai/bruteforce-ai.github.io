@@ -198,6 +198,7 @@ blockquote {
     -webkit-overflow-scrolling: touch;
     max-width: 100%;
     text-align: center;
+    line-height: 20;
 }
 
 .math-block.plain {
@@ -213,6 +214,7 @@ blockquote {
     -webkit-overflow-scrolling: touch;
     padding-bottom: 0.5rem;
 }
+
 
 pre[class*="language-"] {
     border-radius: 0.75rem !important;
@@ -1005,6 +1007,7 @@ pre[class*="language-"] {
     .math-block.plain {
         padding: 0;
     }
+
 }
 
 /* Auto Table of Contents */

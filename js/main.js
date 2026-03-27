@@ -166,10 +166,14 @@ function initMiniGraphs() {
     const graphs = document.querySelectorAll('.mini-graph');
     graphs.forEach(container => {
         const funcStr = container.getAttribute('data-function');
+        const funcStr2 = container.getAttribute('data-function-2');
         const minX = parseFloat(container.getAttribute('data-min') || '0');
         const maxX = parseFloat(container.getAttribute('data-max') || '1');
         const title = container.getAttribute('data-title') || '';
         const color = container.getAttribute('data-color') || 'var(--accent-primary)';
+        const color2 = container.getAttribute('data-color-2') || 'var(--accent-secondary)';
+        const legend = container.getAttribute('data-legend') || '';
+        const legend2 = container.getAttribute('data-legend-2') || '';
         const xTitle = container.getAttribute('data-x-title') || '';
         const yTitle = container.getAttribute('data-y-title') || '';
         const xTicksStr = container.getAttribute('data-x-ticks') || '';
@@ -186,6 +190,18 @@ function initMiniGraphs() {
         // Setup Container
         container.classList.add('mini-graph-container');
 
+        let legendHtml = '';
+        if (legend || legend2) {
+            legendHtml = `<div class="mini-graph-legend" style="position: absolute; top: 10px; right: 10px; background: var(--bg-primary, rgba(255,255,255,0.8)); border: 1px solid var(--border-color, #e5e7eb); padding: 5px 10px; border-radius: 5px; font-size: 0.75rem; pointer-events: none; z-index: 10; display: flex; flex-direction: column; gap: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">`;
+            if (legend) {
+                legendHtml += `<div style="display: flex; align-items: center; gap: 6px;"><span style="width: 12px; height: 3px; background-color: ${color}; border-radius: 2px;"></span> <span style="color: var(--text-secondary)">${legend}</span></div>`;
+            }
+            if (legend2) {
+                legendHtml += `<div style="display: flex; align-items: center; gap: 6px;"><span style="width: 12px; height: 3px; background-color: ${color2}; border-radius: 2px;"></span> <span style="color: var(--text-secondary)">${legend2}</span></div>`;
+            }
+            legendHtml += `</div>`;
+        }
+
         const titleHtml = title ? `<div class="mini-graph-title">${title}</div>` : '';
         const yTitleDiv = yTitle ? `<div style="grid-area: title-y; writing-mode: vertical-rl; transform: rotate(180deg); text-align: center; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); display: flex; align-items: center; justify-content: center;">${yTitle}</div>` : '';
         const xTitleDiv = xTitle ? `<div style="grid-area: title-x; text-align: center; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); padding-top: 5px;">${xTitle}</div>` : '';
@@ -197,6 +213,7 @@ function initMiniGraphs() {
                 ${yTitleDiv}
                 <div class="mini-graph-y-axis-labels" style="grid-area: labels-y; position: relative; width: 35px;"></div>
                 <div class="mini-graph-svg-wrapper" style="grid-area: svg; position: relative; cursor: ${showHoverTooltip ? 'crosshair' : 'default'};">
+                    ${legendHtml}
                     <div class="mini-graph-tooltip"></div>
                     <svg class="mini-graph-svg" viewBox="0 0 400 200" preserveAspectRatio="none" style="width: 100%; height: 100%; overflow: visible; display: block;">
                         <defs>
@@ -217,6 +234,7 @@ function initMiniGraphs() {
                         <g class="mini-graph-dotted-lines"></g>
                         <g class="mini-graph-residuals"></g>
                         <path class="mini-graph-path" d=""></path>
+                        <path class="mini-graph-path-2" d="" style="fill: none; stroke: var(--accent-secondary); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));"></path>
                         <g class="mini-graph-vectors"></g>
                         <g class="mini-graph-data-points"></g>
                         <circle class="mini-graph-hover-point" r="5" style="display:none;"></circle>
@@ -229,6 +247,7 @@ function initMiniGraphs() {
 
         const svg = container.querySelector('.mini-graph-svg');
         const path = container.querySelector('.mini-graph-path');
+        const path2 = container.querySelector('.mini-graph-path-2');
         const hoverPoint = container.querySelector('.mini-graph-hover-point');
         const dataPointsGroup = container.querySelector('.mini-graph-data-points');
         const residualsGroup = container.querySelector('.mini-graph-residuals');
@@ -262,7 +281,21 @@ function initMiniGraphs() {
             }
         }
 
+        let f2 = null;
+        if (funcStr2) {
+            try {
+                if (funcStr2.includes('=>') || funcStr2.trim().startsWith('function')) {
+                    f2 = new Function(`return (${funcStr2})`)();
+                } else {
+                    f2 = new Function('x', `return ${funcStr2}`);
+                }
+            } catch (e) {
+                console.error("Error parsing function 2:", e);
+            }
+        }
+
         const curvePoints = [];
+        const curvePoints2 = [];
         const steps = 100;
         let minY = Infinity, maxY = -Infinity;
 
@@ -279,6 +312,20 @@ function initMiniGraphs() {
                     const y = f(x);
                     if (!isNaN(y) && isFinite(y)) {
                         curvePoints.push({ x, y });
+                        minY = Math.min(minY, y);
+                        maxY = Math.max(maxY, y);
+                    }
+                } catch (e) { }
+            }
+        }
+
+        if (f2) {
+            for (let i = 0; i <= steps; i++) {
+                const x = minX + (i / steps) * (maxX - minX);
+                try {
+                    const y = f2(x);
+                    if (!isNaN(y) && isFinite(y)) {
+                        curvePoints2.push({ x, y });
                         minY = Math.min(minY, y);
                         maxY = Math.max(maxY, y);
                     }
@@ -334,6 +381,12 @@ function initMiniGraphs() {
             let d = curvePoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${scaleX(p.x)} ${scaleY(p.y)}`).join(' ');
             path.setAttribute('d', d);
             if (color) path.style.stroke = color;
+        }
+
+        if (f2 && curvePoints2.length > 0) {
+            let d2 = curvePoints2.map((p, i) => `${i === 0 ? 'M' : 'L'} ${scaleX(p.x)} ${scaleY(p.y)}`).join(' ');
+            path2.setAttribute('d', d2);
+            if (color2) path2.style.stroke = color2;
         }
 
         // Draw Residuals and Scattered Points

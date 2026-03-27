@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bias Variance Tradeoff | brute.ai</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/theme.css?v=2">
+    <link rel="stylesheet" href="css/style.css?v=2">
+
+    <!-- MathJax/KaTeX -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+    <!-- Prism.js -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+
+    <!-- Theme Logic -->
+    <script src="js/theme.js"></script>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="nav-logo">
+                brute.ai
+            </a>
+            <div class="nav-links">
+                <a href="../index.html" class="nav-link">Home</a>
+                <a href="../about.html" class="nav-link">About</a>
+                <button id="theme-toggle" class="theme-toggle">
+                    <i data-lucide="moon"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <header style="margin: 3rem 0;">
+            <p
+                style="color: var(--accent-primary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
+                <a href="../index.html">Fundamental ML Series</a>
+            </p>
+            <h1>Bias, Variance, Overfitting, Underfitting, Regularisation</h1>
+            <!-- <p style="color: var(--text-muted);">March 2024 • 15 min read</p> -->
+        </header>
+
+        <section>
+            <div class="table-of-contents"></div>
+            Well this section is going to be a bit deeper into technical and mathematics. Hoping you have gone through
+            the last chapter of practical implementation of linear regression, we will move ahead. And if you have not,
+            here is a quick sneak peak into data handling.
+
+
+            <h2>
+                Data Handling: Train, Test, Validation
+            </h2>
+
+            <p></p>
+
+            <h3>
+                Just an Analogy
+            </h3>
+
+            <p>
+                Let's get it quickly with an example. Suppose, we are preparing for a rare exam and for that we only
+                have <strong>100 sample questions</strong>. All our preparation has to be done with that.
+
+                <br><br>
+                Now, let's assume there are two students, <strong>Hazelnut</strong> and <strong>Chocolate</strong>. What
+                Hazelnut did, was to use up all the questions. As he read the concepts, he practiced with all the 100
+                questions like examples, understanding the given answers.
+                <br><br>
+                But Chocolate, on the other hand, after reading the concepts, made a split. She separated out 20
+                questions randomly from the 100. And then she practiced with the 80 like Hazelnut did, read the answers
+                and understood. And at the end, she blindly (without looking at the answers) attempted the rest 20,
+                <span class="highlight">just to validate</span> how good her preparation was.
+                <br><br>
+                <strong>Who do you think made the right choice?</strong>
+                <br><br>
+            </p>
+
+
+            <h3>
+                Let's Get Real
+            </h3>
+
+            <p>
+                You're right. We are going with <strong>Chocolate</strong>.
+                <br><br>
+
+                So, let's say we have a dataset $D = {(x_1,y_1,\dots,x_n,y_n)}$. Our essential goal is to divide the
+                dataset into <span class="highlight">Training Set</span> and <span class="highlight">Testing Set</span>.
+                Let's say the training is $D_{Train}$ and testing is $D_{Test}$. The datapoints are divided into
+                $D_{Train}$ and
+                $D_{Test}$ randomly with making them <strong>exhaustive</strong> and <strong>mutually
+                    exclusive</strong>.
+                $$
+                D_{Train} \cup D_{Test} = D \quad \text{and} \quad D_{Train} \cap D_{Test} = \emptyset
+                $$
+
+                So, while learning about the pattern and the problem, the <strong>model only looks at the training
+                    set</strong> ($D_{Train}$). And once the model understood the pattern to the best of its ability, it
+                is then tested on the <strong>testing set</strong> ($D_{Test}$) to check how well it generalizes to the
+                unseen data.
+
+                <br><br>
+
+                Testing also helps us in understanding <span class="highlight">performance comparison between different
+                    models</span>. So, if we have say multiple different models (totally different model, or same model
+                with different features, or hyperparameters), we can test them and compare their
+                performance score on testing. Since, it is the data none of the model has seen before, it is a fair
+                comparison.
+
+                <br><br>
+
+            <div class="callout">
+                In simple words, testing is the blind measurement of performance of the model we tried to train for our
+                problem. In practice <strong>75-25</strong> or <strong>80-20</strong> are good splits for train-test.
+                <br><br>
+                <strong>Note</strong>:We also sometimes divide it into three sets: <strong>Training Set</strong>,
+                <strong><span class="highlight">Validation Set</span></strong> and <strong>Testing Set</strong>. The
+                first
+                two are used for training
+                and tuning the model parameters. So, like we did we train and test, in this case let's say we take train
+                and validation. Remember, the hyperparameters we had, like batch size in gradient descent, or
+                learning_rate; we tune them with validation. So, we train the model with a value of those
+                hyperparameters and then test the performance in validation set. We do this for multiple values of
+                hyperparameters and pick the one which gives the best performance on validation set.
+                <br><br>
+                Once we are done with tuning the hyperparameters, we train the model with the best hyperparameters on
+                the
+                training set and then test the performance on the testing set.
+            </div>
+            <br><br>
+            </p>
+
+
+
+
+            <h2>
+                <span class="highlight-intuition">
+                    Train-Test Error
+                </span>
+            </h2>
+
+            <p>
+            <div class="side-by-side ratio-1-2 align-start">
+                <div>
+                    <p>
+                        Say we've a graph of training error. With increase in model complexity, the training error
+                        decreases ofcourse. We add more parameters or say for linear regression, we increase the
+                        polynomial degree.
+                        <br><br>
+                        Like the curve, on the right, we can see the training error (loss function value) decreases. And
+                        ideally, it stops when loss value change is very minimal.
+                        <br><br>
+                        But, <strong>what about the testing error?</strong>
+
+
+                    </p>
+                </div>
+
+
+
+                <div class="side-content">
+                    <div class="mini-graph" data-function="x => 5 * Math.exp(-0.6 * x) + 0.5" data-min="0" data-max="8"
+                        data-x-title="Model Complexity" data-y-title="Training Error" data-x-ticks="none"
+                        data-y-ticks="none" data-color="#ef4444" style="width: 100%; margin: 1rem 0;">
+                    </div>
+                </div>
+            </div>
+
+
+
+            <div class="side-by-side ratio-1-2 align-start">
+                <div>
+                    <p>
+                        If we also plot the test error in the same graph (blue), we see something interesting.
+                        <br><br>
+                        Initially, the test error also decreases. But, at some point, it starts increasing.
+                        <strong>Why?</strong> We will see that in a bit later.
+                        But for now, let's just focus on the fact that we want to find the sweet spot, where the test
+                        error is minimum.
+                        <br><br>
+                        This sweet spot is known as the <strong>optimal model complexity</strong>.
+                        <br><br>
+
+                    </p>
+                </div>
+
+
+
+                <div class="side-content">
+                    <div class="mini-graph" data-function="x => 5 * Math.exp(-0.6 * x) + 0.5"
+                        data-function-2="x => 0.15*Math.pow(x, 2) + 4.5*Math.exp(-0.5*x) + 1.2" data-min="0"
+                        data-max="5" data-x-title="Model Complexity" data-y-title="Error (Train vs Test)"
+                        data-legend="Train Error" data-legend-2="Test Error" data-x-ticks="none" data-y-ticks="none"
+                        data-color="#ef4444" data-color-2="#3b82f6" style="width: 100%; margin: 1rem 0;">
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="callout">
+                Let's just keep the learning of this train-test error patterns. This will influence all our learnings
+                ahead of Bias, Variance, Overfitting, Underfitting and Regularisation.
+            </div>
+            </p>
+
+
+
+            <h3>
+                Why this pattern appears in Test Error?
+            </h3>
+            As model complexity increases, the model becomes more flexible and better at fitting the training data, so
+            the training error keeps decreasing. Initially, this flexibility is beneficial because the model starts
+            capturing the true underlying patterns in the data, which also reduces the test error. However, beyond a
+            certain point, the model becomes too complex and begins to fit not just the real patterns but also the
+            random noise and peculiarities specific to the training dataset. This means it is no longer learning
+            generalizable structure, but rather memorizing the training examples. As a result, while the training error
+            continues to decrease, the model performs worse on unseen data, causing the test error to increase.
+
+            <br><br>
+            <strong style="color: rgb(189, 88, 220);">Go to the <a href="#Simulator">simulator</a> at the end of the
+                page
+                and
+                play with it to get a better
+                intuition of
+                this concept</strong>.
+            <br><br>
+
+
+
+            <h2>
+                <span class="highlight-maths">
+                    Bias-Variance Tradeoff
+                </span>
+            </h2>
+
+            <p>
+            <div class="callout callout-info">
+                <strong>Bias</strong>: How much error the model has increased even in presence of large amount of data.
+                <br><br>
+                <strong>Variance</strong>: How much do your predictions change the training data.
+            </div>
+            Let's look into some maths. Say mean predictions are $\bar g(x)$ (prediction function is $g(x)$) and actual
+            function is $f(x)$.
+            <br>
+            So, we can define the <strong>Bias</strong> as:
+            <br>
+            $$\text{Bias: } \big[\bar{g}(x) - f(x)\big] $$
+            As, we defined previously, $\bar{g}(x)$ is the mean prediction over all possible training sets. So, the bias
+            is the difference between the mean prediction and the actual function. Bias in this expression represents
+            the error introduced by approximating a real-world problem with a simplified model.
+            $$
+            \text{Variance: } E\big[(g(x) - \bar{g}(x))^2\big]
+            $$
+            The variance represents the variability of the model's predictions for a given input $x$ across different
+            training datasets. It measures how much the model's predictions change when trained on different subsets of
+            the data.
+            <br> <br>
+            We also consider one more term, i.e., <strong>Irreducible Error</strong>. It is the error that cannot be
+            reduced by any model. It is the error that is introduced by the noise in the data.
+            $$
+            \text{Noise: } E\big[(y - f(x))^2\big]
+            $$
+            <br>
+            </p>
+
+            <h3><span class="highlight">Bias-Variance Analysis Using Regression
+                </span>
+            </h3>
+
+            <p>
+                We know our true function is $f(x)$,
+                $$
+                y = f(x) + \epsilon, \quad \epsilon \sim N(0, \sigma^2)
+                $$
+                Given a dataset of $n$ samples,
+                $$
+                D = {x_i, y_i}, \quad i = 1, 2, \dots, n
+                $$
+                We fit a linear regression hypothesis parameterized by,
+                $$
+                w: g_D(x) = w^T x
+                $$
+                to minimize sum of squared errors,
+                $$
+                \sum_{i} (y_i - g_D(x_i))^2
+                $$
+
+                Given a new test point $(\hat{x}, \hat{y})$, while
+                $$
+                \hat{y} = f(\hat{x}) + \epsilon \dots (A)
+                $$
+                <strong>What is
+                    the expected test error for $\hat{x}$?</strong>
+                <br><br><br><br>
+                Let's calculate that.
+            </p>
+
+            <div class="math-block plain">
+                $$
+                \begin{align*}
+                Err(\hat{x}) = E\big[(y - g_D(\hat{x}))^2\big] \\[5pt]
+                = E\big[g(\hat{x})^2 + (\hat{y})^2 - 2g(\hat{x})\hat{y}\big] \\[5pt]
+                = E\big[g(\hat{x})^2\big] + E\big[(\hat{y})^2\big] - 2E\big[g(\hat{x})\big]E\big[\hat{y}\big] \\[5pt]
+                = E\big[ (g(\hat{x}) - \bar{g}(\hat{x}))^2 \big] + \bar{g}(\hat(x))^2 + E\big[\hat{y}^2\big] -
+                2E\big[g(\hat{x})\big] \cdot E\big[\hat{y}\big]
+                \end{align*}
+                $$
+            </div>
+
+            Now, we know that,
+            <div class="math-block">
+                $$
+                \text{Var}(X) = E[X^2] - (E[X])^2 \\[5pt]
+                \implies E[X^2] = \text{Var}(X) - (E[X])^2 \\[5pt]
+                \text{so, } E\big[g(\hat{x})^2\big] = E\big[(g(\hat{x}) - \bar{g}(\hat{x})^2) \big] +
+                \bar{g}(\hat{x})^2 \quad \dots (B)
+                $$
+            </div>
+            In another side note, let's dive into $\hat{y}$, replacing from A.
+
+            <div class="math-block">
+                $$
+                E\big[\hat{y}\big] = E\big[f(\hat{x}) + \epsilon\big] = f(\hat{x}) + E[\epsilon] =
+                f(\hat{x}) \dots (C)\\[5pt]
+                \text{And, }E\big[\hat{y}^2\big] = E\big[(\hat{y} - E[\hat{y}])^2\big] + (E[\hat{y}])^2 \quad
+                \dots (D)
+                $$
+            </div>
+
+            Now, let's go back to <strong>our original derivation</strong>,
+            <div class="math-block plain">
+                $$\begin{align*}
+                = E\big[ (g(\hat{x}) - \bar{g}(\hat{x}))^2 \big] + \bar{g}(\hat(x))^2 + E\big[\hat{y}^2\big] -
+                2E\big[g(\hat{x})\big] \cdot E\big[\hat{y}\big] \\[5pt]
+                \end{align*}$$
+            </div>
+            and, divide it into two parts. And look at them separately.
+
+            <div class="math-block plain">
+                $$\begin{align*}
+                P_1 = E\big[ (g(\hat{x}) - \bar{g}(\hat{x}))^2 \big] \\[5pt]
+                P_2 = E\big[\hat{y}^2\big] + \bar{g}(\hat(x))^2- 2E\big[g(\hat{x})\big] \cdot E\big[\hat{y}\big] \\[5pt]
+                \text{And ofcourse, } P_1 + P_2 = Err(\hat{x}) \\[30pt]
+                \text{From D, } E\big[\hat{y}^2\big] = E\big[(\hat{y} - f(\hat{x}))^2\big] +f(\hat{x})^2 \\[5pt]
+                P_2 = E\big[(\hat{y} - f(\hat{x}))^2\big] +f(\hat{x})^2 + \bar{g}(\hat(x))^2- 2E\big[g(\hat{x})\big]
+                \cdot f(\hat{x}) \\[5pt]
+                = E\big[(\hat{y} - f(\hat{x}))^2\big] + (f(\hat{x}) - \bar{g}(\hat{x}))^2 \\[5pt]
+                \end{align*}$$
+            </div>
+
+            Now, if we go back to our old definitions, and start splitting this final expression into parts, we see
+            that,
+            $$
+            \mathbf{P_1} = \mathbf{\color{green}{E\big[ (g(\hat{x}) - \bar{g}(\hat{x}))^2 \big]}} =
+            \mathbf{Var(g(\hat{x}))}
+            $$
+            Then, for the next part,
+            $$
+            P_2 = \mathbf{\color{red}{E\big[(\hat{y} - f(\hat{x}))^2\big]}} + \mathbf{\color{blue}{(f(\hat{x}) -
+            \bar{g}(\hat{x}))^2}}
+            $$
+            Now, we know that, $\hat{y} - f(\hat{x}) = \epsilon$. And the seconf term is just expression of bias.
+            $$
+            \mathbf{P_2} = \mathbf{{\sigma^2}} + \mathbf{{Bias(g(\hat{x}))^2}}
+            $$
+
+            So, after all this trouble we can say that,
+            <div class="math-block">
+                $$
+                \mathbf{Err(\hat{x})} = \mathbf{Var(g(\hat{x}))} + \mathbf{Bias(g(\hat{x}))^2} + \mathbf{\sigma^2}
+                $$
+            </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            <br><br><br><br><br><br><br><br><br>
+            <!-- <div>
+                <h3 id="Simulator">Interactive Polynomial Regression Simulator</h3>
+                <p>
+                    Adjust the slider below to see polynomial regression in action! Increase the model complexity
+                    (degree of
+                    the polynomial) and observe how the curve fits the data more tightly, eventually learning the noise.
+                    Watch how the Training Error continually drops, but the Test Error eventually shoots up due to
+                    Overfitting.
+                </p>
+
+                <div
+                    style="margin: 2rem 0; padding: 2rem; background-color: var(--bg-secondary); border-radius: 1rem; border: 1px solid var(--border-color);">
+                    <div style="margin-bottom: 2rem;">
+                        <label for="poly-degree-slider"
+                            style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-primary);">
+                            Polynomial Degree: <span id="poly-degree-label"
+                                style="color: var(--accent-primary); font-size: 1.25rem;">1</span>
+                        </label>
+                        <input type="range" id="poly-degree-slider" min="1" max="15" value="1"
+                            style="width: 100%; cursor: pointer;">
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 2rem;">
+                        <div id="plot-fit" style="width: 100%; height: 45%"></div>
+                        <div id="plot-error" style="width: 100%; height: 45%"></div>
+                    </div>
+                </div>
+            </div> -->
+
+
+
+            <section class="references-section">
+                <h2>References & Further Reading</h2>
+                <ol class="references-list">
+
+                </ol>
+            </section>
+        </section>
+    </main>
+
+    <footer class="full-footer"></footer>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/poly_simulator.js"></script>
+</body>
+
+</html>
