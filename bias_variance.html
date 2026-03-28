@@ -503,22 +503,156 @@
             </div>
 
 
-            I will also take the liberty to quote another example picture from the Stanford Notes (in ref). The problem
-            in the picture should be self-explanatory.
+            I will also take the liberty to quote another example picture from the notes of <strong>Sebastian
+                Raschka</strong> (in ref). The problem
+            in the picture should be self-explanatory. For more into this please look at the notes in ref.
             <br><br>
             <img src="assets/images/bias_var.png" alt="Bias Variance" style="width: 100%;">
             <br><br>
 
 
 
+            <br>
+            <h2>
+                <span class="highlight-maths">
+                    Regularisation
+                </span>
+            </h2>
+
+            <p>
+                So, till now we have seen the problems that may arise if we don't control <strong>model
+                    complexity</strong>. Too complex, or too simple both can harm. So, like we deal with any other such
+                <span class="highlight">optimisation problem</span> in machine learning, we add
+                <strong>hyperparameters</strong> to control it.
+
+                <br><br>
+
+                In simple words, we add a term in loss function to regulate how complex the model should be. This term
+                essentially also penalises <strong>model complexity</strong>. Something like this,
+                $$
+                Loss_{reg}(w) = Loss_D(w) + \lambda Reg(w)
+                $$
+
+
+            </p>
+
+            <h3>
+                Popular Regularisation Techniques
+            </h3>
+
+            The most popular one is definitely $L_2$ Regularisation. Mathematically,
+            $$
+            Reg(w) = ||w||_2^2
+            $$
+            This is also called <strong>Tikhonov Regularisation</strong> and Linear Regression with this regularisation
+            is known as <span class="highlight">Ridge Regression</span>.
+
+            <br><br>
+
+
+            Let's see what this term practically impacts in. The $||w||_2^2$ term penalises large weights. So, the model
+            will try to minimize the weights. This in turn will reduce the model complexity. In practice, it is just sum
+            of squares of weights.
+
+
+            <h3>Objective for <span class="highlight">Ridge Regression</span></h3>
+
+            <div class="math-block plain">
+                $$\begin{align*}
+                w_{ridge} = \arg\min_{w} ||f_{w} - y||_2^2 + \lambda ||w||_2^2 \\[5pt]
+                L_{reg} = (y-f_{w})^T(y-f_{w}) + \lambda w^Tw \\[5pt]
+                \text{Our goal is, } \nabla_{w}L_{reg} = 0 \\[30pt]
+                \implies -2(f_{w}-y)f_{w}^T + 2\lambda w = 0 \\[5pt]
+                \text{or, } \mathbf{w=(f^Tf + \lambda I)^{-1}f^Ty}
+                \end{align*}$$
+
+            </div>
+
+            It is provable that, $f^Tf + \lambda I$ is always invertible. So, this is the closed form solution in Ridge
+            Regression.
+            <br><br>
+            Also, if you remember our little venture into <strong>Maximum Aposteriori Estimation</strong>, you will
+            recall a final expression for $w$ was something like this,
+            <div class="math-block plain">
+                $$
+                W_{MAP} = \arg\min_{w} \frac{1}{2\sigma^2} \sum_{j}(y_i-W^Tx_i)^2 +
+                \frac{\lambda}{2} ||w||_2^2
+                $$
+            </div>
+
+            Now, that we simplify it and sort out all constants, doesn't it look something like this,
+            <div class="math-block plain">
+                $$
+                W_{MAP} = \arg\min_{w} c_1 \sum_{j}(y_i-W^Tx_i)^2 +
+                c_2 ||w||_2^2
+                $$
+            </div>
+            It is the, MSE loss function added with a term which looks <span class="highlight">pretty similar to our
+                ridge term</span>, right? Yes! So, <strong>MAP estimation is nothing but Ridge Regression with a
+                Gaussian prior
+                on the weights</strong>.
+
+            <br><br>
 
 
 
+            <h3>
+                Lasso Regression
+            </h3>
+            Well, there is one more very crucial regression way. It is, $L_1$ Norm Regularisation. Mathematically,
+            $$
+            Reg(w) = ||w||_1
+            $$
+
+            <strong>Lasso</strong> has a meaning too tbh, <em>Least Absolute Shrinkage and Selection Operator</em>.
+            <br>
+            As the name suggested, it just takes the absolute value of the weights and penalises the model for having
+            large weights.
+            $$
+            w_{Lasso} = \arg\min_{w} ||f_w-y||_2^2 + \lambda ||w||_1
+            $$
+            And, to optimize it, we get the following,
+            $$
+            min_w (y-f_w)^T(y-f_w) \text{, subject to } ||w||_1 \le c
+            $$
+
+            <div class="callout callout-info">
+                <ul>
+                    <li>For Lasso Regression, there is <strong>no closed form solution</strong>. We have to use
+                        <strong>quadratic programming</strong> to solve it.
+                    </li>
+                    <li>Lasso Regression provides <strong>sparse solution</strong>, a lot of weights become zero if not
+                        very relevant.</li>
+                </ul>
+            </div>
+
+
+            <h3>Why Lasso Regression Comes with Sparse Solution?</h3>
+
+            We know that, $||w||_1 = \sum_j |w_j|$. Now, $L_1$ norm is not differentiable at $w_j=0$. So, we can't
+            use gradient descent directly. We have to use quadratic programming to solve it.
+            Its subgradients are,
+
+            $$
+            \partial ||w||_1 = \begin{cases}
+            \text{sign}(w_j) & \text{if } w_j \neq 0 \\
+            [-1, 1] & \text{if } w_j = 0
+            \end{cases}
+            $$
+
+            This means:
+
+            If correlation of feature $j$ with residual is small, it satisfies the interval condition
+            So exactly $w_j = 0$ becomes optimal.
+
+            <strong>Geometrically</strong>, the contour of $L_1$ norm is a diamond shape. And the contour of $L_2$ norm
+            is a circle shape. The optimum occurs where contours touch constraint boundary. Corners of diamond lie on
+            axes and many coordinates become exactly zero.
 
 
 
             <br><br><br><br><br><br><br><br><br>
-            <!-- <div>
+            <div>
                 <h3 id="Simulator">Interactive Polynomial Regression Simulator</h3>
                 <p>
                     Adjust the slider below to see polynomial regression in action! Increase the model complexity
@@ -545,14 +679,19 @@
                         <div id="plot-error" style="width: 100%; height: 45%"></div>
                     </div>
                 </div>
-            </div> -->
+            </div>
 
 
 
             <section class="references-section">
                 <h2>References & Further Reading</h2>
                 <ol class="references-list">
-
+                    <li>Notes of Sebastian Raschka <a href="">STAT 479: Machine Learning
+                            Lecture Notes</a></li>
+                    <li>MLU Explain as usual very helpful for visualization: <a
+                            href="https://mlu-explain.github.io/bias-variance/">Here</a></li>
+                    <li>Stanford Notes <a href="https://cs229.stanford.edu/summer2019/BiasVarianceAnalysis.pdf">Here</a>
+                    </li>
                 </ol>
             </section>
         </section>
