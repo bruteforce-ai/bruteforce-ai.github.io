@@ -167,13 +167,16 @@ function initMiniGraphs() {
     graphs.forEach(container => {
         const funcStr = container.getAttribute('data-function');
         const funcStr2 = container.getAttribute('data-function-2');
+        const funcStr3 = container.getAttribute('data-function-3');
         const minX = parseFloat(container.getAttribute('data-min') || '0');
         const maxX = parseFloat(container.getAttribute('data-max') || '1');
         const title = container.getAttribute('data-title') || '';
         const color = container.getAttribute('data-color') || 'var(--accent-primary)';
         const color2 = container.getAttribute('data-color-2') || 'var(--accent-secondary)';
+        const color3 = container.getAttribute('data-color-3') || 'var(--accent-tertiary, #f59e0b)';
         const legend = container.getAttribute('data-legend') || '';
         const legend2 = container.getAttribute('data-legend-2') || '';
+        const legend3 = container.getAttribute('data-legend-3') || '';
         const xTitle = container.getAttribute('data-x-title') || '';
         const yTitle = container.getAttribute('data-y-title') || '';
         const xTicksStr = container.getAttribute('data-x-ticks') || '';
@@ -181,6 +184,7 @@ function initMiniGraphs() {
         const heightVal = container.getAttribute('data-height') || '300px';
         const widthVal = container.getAttribute('data-width') || '100%';
         const pointsStr = container.getAttribute('data-points') || '';
+        const testPointsStr = container.getAttribute('data-test-points') || '';
         const vectorsStr = container.getAttribute('data-vectors') || '';
         const dottedLinesStr = container.getAttribute('data-dotted-lines') || '';
         const showResiduals = container.getAttribute('data-show-residuals') === 'true';
@@ -191,13 +195,16 @@ function initMiniGraphs() {
         container.classList.add('mini-graph-container');
 
         let legendHtml = '';
-        if (legend || legend2) {
+        if (legend || legend2 || legend3) {
             legendHtml = `<div class="mini-graph-legend" style="position: absolute; top: 10px; right: 10px; background: var(--bg-primary, rgba(255,255,255,0.8)); border: 1px solid var(--border-color, #e5e7eb); padding: 5px 10px; border-radius: 5px; font-size: 0.75rem; pointer-events: none; z-index: 10; display: flex; flex-direction: column; gap: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">`;
             if (legend) {
                 legendHtml += `<div style="display: flex; align-items: center; gap: 6px;"><span style="width: 12px; height: 3px; background-color: ${color}; border-radius: 2px;"></span> <span style="color: var(--text-secondary)">${legend}</span></div>`;
             }
             if (legend2) {
                 legendHtml += `<div style="display: flex; align-items: center; gap: 6px;"><span style="width: 12px; height: 3px; background-color: ${color2}; border-radius: 2px;"></span> <span style="color: var(--text-secondary)">${legend2}</span></div>`;
+            }
+            if (legend3) {
+                legendHtml += `<div style="display: flex; align-items: center; gap: 6px;"><span style="width: 12px; height: 3px; background-color: ${color3}; border-radius: 2px;"></span> <span style="color: var(--text-secondary)">${legend3}</span></div>`;
             }
             legendHtml += `</div>`;
         }
@@ -235,6 +242,7 @@ function initMiniGraphs() {
                         <g class="mini-graph-residuals"></g>
                         <path class="mini-graph-path" d=""></path>
                         <path class="mini-graph-path-2" d="" style="fill: none; stroke: var(--accent-secondary); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));"></path>
+                        <path class="mini-graph-path-3" d="" style="fill: none; stroke: var(--accent-tertiary, #f59e0b); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));"></path>
                         <g class="mini-graph-vectors"></g>
                         <g class="mini-graph-data-points"></g>
                         <circle class="mini-graph-hover-point" r="5" style="display:none;"></circle>
@@ -248,6 +256,7 @@ function initMiniGraphs() {
         const svg = container.querySelector('.mini-graph-svg');
         const path = container.querySelector('.mini-graph-path');
         const path2 = container.querySelector('.mini-graph-path-2');
+        const path3 = container.querySelector('.mini-graph-path-3');
         const hoverPoint = container.querySelector('.mini-graph-hover-point');
         const dataPointsGroup = container.querySelector('.mini-graph-data-points');
         const residualsGroup = container.querySelector('.mini-graph-residuals');
@@ -262,6 +271,14 @@ function initMiniGraphs() {
         let scatteredPoints = [];
         if (pointsStr) {
             scatteredPoints = pointsStr.split(';').map(p => {
+                const parts = p.trim().split(',');
+                return { x: parseFloat(parts[0]), y: parseFloat(parts[1]), label: parts.length > 2 ? parts.slice(2).join(',').trim() : null };
+            }).filter(p => !isNaN(p.x) && !isNaN(p.y));
+        }
+
+        let scatteredTestPoints = [];
+        if (testPointsStr) {
+            scatteredTestPoints = testPointsStr.split(';').map(p => {
                 const parts = p.trim().split(',');
                 return { x: parseFloat(parts[0]), y: parseFloat(parts[1]), label: parts.length > 2 ? parts.slice(2).join(',').trim() : null };
             }).filter(p => !isNaN(p.x) && !isNaN(p.y));
@@ -294,13 +311,31 @@ function initMiniGraphs() {
             }
         }
 
+        let f3 = null;
+        if (funcStr3) {
+            try {
+                if (funcStr3.includes('=>') || funcStr3.trim().startsWith('function')) {
+                    f3 = new Function(`return (${funcStr3})`)();
+                } else {
+                    f3 = new Function('x', `return ${funcStr3}`);
+                }
+            } catch (e) {
+                console.error("Error parsing function 3:", e);
+            }
+        }
+
         const curvePoints = [];
         const curvePoints2 = [];
+        const curvePoints3 = [];
         const steps = 100;
         let minY = Infinity, maxY = -Infinity;
 
         // Collect Y-range from scattered points
         scatteredPoints.forEach(p => {
+            minY = Math.min(minY, p.y);
+            maxY = Math.max(maxY, p.y);
+        });
+        scatteredTestPoints.forEach(p => {
             minY = Math.min(minY, p.y);
             maxY = Math.max(maxY, p.y);
         });
@@ -326,6 +361,20 @@ function initMiniGraphs() {
                     const y = f2(x);
                     if (!isNaN(y) && isFinite(y)) {
                         curvePoints2.push({ x, y });
+                        minY = Math.min(minY, y);
+                        maxY = Math.max(maxY, y);
+                    }
+                } catch (e) { }
+            }
+        }
+
+        if (f3) {
+            for (let i = 0; i <= steps; i++) {
+                const x = minX + (i / steps) * (maxX - minX);
+                try {
+                    const y = f3(x);
+                    if (!isNaN(y) && isFinite(y)) {
+                        curvePoints3.push({ x, y });
                         minY = Math.min(minY, y);
                         maxY = Math.max(maxY, y);
                     }
@@ -389,6 +438,12 @@ function initMiniGraphs() {
             if (color2) path2.style.stroke = color2;
         }
 
+        if (f3 && curvePoints3.length > 0) {
+            let d3 = curvePoints3.map((p, i) => `${i === 0 ? 'M' : 'L'} ${scaleX(p.x)} ${scaleY(p.y)}`).join(' ');
+            path3.setAttribute('d', d3);
+            if (color3) path3.style.stroke = color3;
+        }
+
         // Draw Residuals and Scattered Points
         scatteredPoints.forEach((p, idx) => {
             const px = scaleX(p.x);
@@ -419,6 +474,27 @@ function initMiniGraphs() {
             c.setAttribute("cy", py);
             c.setAttribute("r", "4");
             c.classList.add("mini-graph-point");
+            dataPointsGroup.appendChild(c);
+            if (p.label) {
+                const pLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                pLabel.setAttribute("x", px + 6);
+                pLabel.setAttribute("y", py - 6);
+                pLabel.textContent = p.label;
+                pLabel.classList.add("mini-graph-point-label");
+                dataPointsGroup.appendChild(pLabel);
+            }
+        });
+
+        scatteredTestPoints.forEach((p, idx) => {
+            const px = scaleX(p.x);
+            const py = scaleY(p.y);
+
+            const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            c.setAttribute("cx", px);
+            c.setAttribute("cy", py);
+            c.setAttribute("r", "5");
+            c.setAttribute("fill", "var(--accent-tertiary, #f59e0b)");
+            c.classList.add("mini-graph-test-point");
             dataPointsGroup.appendChild(c);
             if (p.label) {
                 const pLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");

@@ -380,12 +380,134 @@
                 \mathbf{Err(\hat{x})} = \mathbf{Var(g(\hat{x}))} + \mathbf{Bias(g(\hat{x}))^2} + \mathbf{\sigma^2}
                 $$
             </div>
+            <br><br>
+
+
+
+            <h3>
+                <span class="highlight">Analysis</span>
+            </h3>
+            So, clearly <strong>Bias</strong> and <strong>Variance</strong> are two components of error. And we can
+            reduce the error by reducing either of them. But, there is a catch. As we reduce bias, variance increases.
+            And as we reduce variance, bias increases. This is known as <strong>Bias-Variance Tradeoff</strong>. If we
+            plot the curve with an arbitrary <strong>noise</strong> value, the graph looks like this.
+
+            <div class="mini-graph" data-function="x => 4*Math.exp(-0.6*x)" data-function-2="x => 0.06*Math.pow(x, 2.1)"
+                data-function-3="x => 4*Math.exp(-0.6*x) + 0.06*Math.pow(x, 2.1) + 0.4" data-min="0" data-max="7"
+                data-x-title="Model Complexity" data-y-title="Error Components" data-legend="Bias²"
+                data-legend-2="Variance" data-legend-3="Total Test Error" data-color="#ef4444" data-color-2="#10b981"
+                data-color-3="#3b82f6" data-x-ticks="none" data-y-ticks="none" style="width: 60%; margin: 3rem auto;">
+            </div>
+
+            So, after a certain point, we can only optimise either bias or variance but not both, and the goal is to
+            find the sweet spot between them.
+
+            <div class="callout callout-info">
+                In simple terms, when your model is not even trained properly, can't understand the pattern in data yet
+                and is just too simple to predict correctly, the problem is <strong>High Bias</strong>. On the other
+                hand, when your model is too complex and learns the training data too well, including the noise, and has
+                learnt so specificly for the train data that it fails to predict for the test data, then the problem is
+                <strong>High Variance</strong>.
+            </div>
 
 
 
 
+            <h2>
+                <span class="highlight-intuition">
+                    Overfitting and Underfitting
+                </span>
+            </h2>
+
+            Technically, we have already covered these two. <strong>Overfitting</strong> is just a scenario when the
+            model has learnt too much about the data. So, it has considered the outliers and tried to minimize cost for
+            every point in training data, leading to <span class="highlight">loss in generality</span>. So,
+            <em>Overfitting</em> represents a situation of <strong>High Variance</strong> and <strong>Low Bias</strong>.
+            <br><br>
+            On the other hand, <strong>Underfitting</strong> is the exact opposite. The model did not learn properly and
+            fails to predict correctly even for the training data. So, it represents a situation of <strong>High
+                Bias</strong> and <strong>Low Variance</strong>.
+
+            <div class="side-by-side ratio-1-1 align-start" style="margin: 1rem 0;">
+                <div>
+                    <div class="mini-graph" data-function="x => 1.6 * x - 0.15"
+                        data-points="0.5,2.5; 1.5,0.8; 2.5,2.9; 3.5,5.6; 4.5,5.6; 5.5,10.5"
+                        data-test-points="2.0,3.2; 4.0,6.5; 5.0,8.0" data-min="0" data-max="6" data-x-title=" "
+                        data-y-title=" " data-x-ticks="none" data-y-ticks="none" data-color="#ef4444"
+                        style="width: 100%;">
+                    </div>
+                </div>
+
+                <div>
+                    <div class="mini-graph" data-function="x => 0.3 * x * x + 1 + Math.sin(x * Math.PI * 1.2) * 1.5"
+                        data-points="0.5,2.5; 1.5,0.8; 2.5,2.9; 3.5,5.6; 4.5,5.6; 5.5,10.5"
+                        data-test-points="2.0,3.2; 4.0,6.5; 5.0,8.0" data-min="0" data-max="6" data-x-title=" "
+                        data-y-title=" " data-x-ticks="none" data-y-ticks="none" data-color="#3b82f6"
+                        style="width: 100%;">
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-bottom: 3rem; font-size: 0.9rem;">
+                <span style="color: var(--text-primary); font-weight: 600;"><span style="font-size: 1.2em;">●</span>
+                    Train Data</span> &nbsp;&nbsp;&nbsp;&nbsp;
+                <span style="color: var(--accent-tertiary, #f59e0b); font-weight: 600;"><span
+                        style="font-size: 1.2em;">●</span> Test Data</span>
+            </div>
 
 
+            So above, we have two graphs. <strong>Can you tell me which one is Overfitting and which one is
+                Underfitting?</strong>
+            <br><br>
+
+            That's right, the left (or top) one is <strong>Underfitting</strong> and the right (or bottom) one is
+            <strong>Overfitting</strong>.
+
+            <div
+                style="display: grid; grid-template-columns: auto 1fr 1fr; gap: 0.5rem; max-width: 450px; margin: 3rem auto; text-align: center;">
+                <div style="padding: 0.5rem;"></div>
+                <div
+                    style="padding: 0.5rem; font-weight: 600; font-size: 0.9rem; color: var(--text-primary); border-bottom: 2px solid var(--border-color);">
+                    Low Variance</div>
+                <div
+                    style="padding: 0.5rem; font-weight: 600; font-size: 0.9rem; color: var(--text-primary); border-bottom: 2px solid var(--border-color);">
+                    High Variance</div>
+
+                <div
+                    style="padding: 0.5rem; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; justify-content: flex-end; color: var(--text-primary); border-right: 2px solid var(--border-color);">
+                    Low Bias</div>
+                <div
+                    style="background-color: var(--bg-secondary); padding: 1rem; border-radius: 0.5rem; border: 1px solid var(--border-color); display: flex; flex-direction: column; justify-content: center;">
+                    <div style="color: var(--accent-primary); font-size: 1rem; font-weight: 700;">
+                        Best Case</div>
+                </div>
+                <div
+                    style="background-color: var(--bg-secondary); padding: 1rem; border-radius: 0.5rem; border: 1px solid var(--border-color); display: flex; flex-direction: column; justify-content: center;">
+                    <div style="color: var(--accent-secondary); font-size: 1rem; font-weight: 700;">
+                        Overfitting</div>
+                </div>
+
+                <div
+                    style="padding: 0.5rem; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; justify-content: flex-end; color: var(--text-primary); border-right: 2px solid var(--border-color);">
+                    High Bias</div>
+                <div
+                    style="background-color: var(--bg-secondary); padding: 1rem; border-radius: 0.5rem; border: 1px solid var(--border-color); display: flex; flex-direction: column; justify-content: center;">
+                    <div style="color: #ef4444; font-size: 1rem; font-weight: 700;">
+                        Underfitting</div>
+                </div>
+                <div
+                    style="background-color: var(--bg-secondary); padding: 1rem; border-radius: 0.5rem; border: 1px solid var(--border-color); display: flex; flex-direction: column; justify-content: center;">
+                    <div style="color: #f59e0b; font-size: 1rem; font-weight: 700;">
+                        Worst Case</div>
+                </div>
+            </div>
+
+
+            I will also take the liberty to quote another example picture from the Stanford Notes (in ref). The problem
+            in the picture should be self-explanatory.
+            <br><br>
+            <img src="assets/images/bias_var.png" alt="Bias Variance" style="width: 100%;">
+            <br><br>
 
 
 
