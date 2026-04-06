@@ -1,0 +1,14 @@
+# Dependencies
+node_modules/
+
+# Build artifacts
+machine_learning_book.tex
+machine_learning_book.pdf
+machine_learning_book.aux
+machine_learning_book.log
+machine_learning_book.out
+machine_learning_book.toc
+graphs_manifest.json
+
+# Generated images
+images/
