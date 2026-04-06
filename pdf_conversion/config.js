@@ -24,7 +24,7 @@ module.exports = {
         { file: 'gradient_descent.html', title: 'Gradient Descent' },
         { file: 'bias_variance.html', title: 'Bias, Variance, Overfitting \\& Regularisation' },
         { file: 'decision_tree.html', title: 'Decision Trees' },
-        { file: 'rnn.html', title: 'Recurrent Neural Networks' },
+        // { file: 'rnn.html', title: 'Recurrent Neural Networks' },
     ],
 
     // ── Page Layout ──────────────────────────────────────────────────────────────
@@ -37,15 +37,15 @@ module.exports = {
 
     // ── Footer ───────────────────────────────────────────────────────────────────
     // Set to null to disable. Supports LaTeX commands.
-    footer: null,             // e.g. 'brute.ai · Machine Learning Notes'
+    footer: 'brute.ai',             // e.g. 'brute.ai · Machine Learning Notes'
 
     // ── References Section ───────────────────────────────────────────────────────
-    showReferences: true,
-    references: [
-        'Sebastian Raschka --- STAT 479 Machine Learning Lecture Notes',
-        'MLU Explain --- \\url{https://mlu-explain.github.io}',
-        'Stanford CS229 Notes --- \\url{https://cs229.stanford.edu}',
-    ],
+    // showReferences: true,
+    // references: [
+    //     'Sebastian Raschka --- STAT 479 Machine Learning Lecture Notes',
+    //     'MLU Explain --- \\url{https://mlu-explain.github.io}',
+    //     'Stanford CS229 Notes --- \\url{https://cs229.stanford.edu}',
+    // ],
 
     // ── Graph Capture ────────────────────────────────────────────────────────────
     // Width of browser window used when screenshotting mini-graphs.

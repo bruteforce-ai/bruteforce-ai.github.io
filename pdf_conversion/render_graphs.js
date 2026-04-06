@@ -246,48 +246,86 @@ function renderGraphSVG(attrs) {
 </svg>`;
 }
 
-// ── 3D Cost Surface (rendered as 2D contour) ────────────────────────────────────
 function render3DPlotSVG() {
-    const size = 300;
-    const range = 20;
-    const steps = 60;
-    const pad = 50;
-    const total = size + 2 * pad;
+    const total = 600;
 
-    let contoursSvg = '';
-    // Draw filled contour rings for J(w,b) = w² + b²
-    const levels = [50, 100, 150, 200, 300, 400, 600, 800];
-    const colors = ['#1a1a6e', '#26268a', '#3232a8', '#4040c4', '#5050d0', '#6666dd', '#8888ee', '#aaaaff'];
-    levels.forEach((level, i) => {
-        const r = (Math.sqrt(level) / range) * (size / 2);
-        contoursSvg += `<circle cx="${pad + size / 2}" cy="${pad + size / 2}" r="${r}" fill="none" stroke="${colors[i]}" stroke-width="1.5" opacity="0.7"/>`;
+    // Isometric Projection Math
+    const cx = total / 2;
+    const cy = total / 2 + 100;
+    const scale = 140;
+    const Math_cos = Math.cos(Math.PI / 6);
+    const Math_sin = Math.sin(Math.PI / 6);
+
+    function project(x, y, z) {
+        const px = (x - y) * Math_cos;
+        const py = (x + y) * Math_sin + z * 0.4;
+        return {
+            x: cx + px * scale,
+            y: cy + py * scale
+        };
+    }
+
+    let wireframeSvg = '';
+    const n = 24;
+
+    // Draw grid lines in X
+    for (let i = 0; i <= n; i++) {
+        const x = -1 + (i / n) * 2;
+        let path = '';
+        for (let j = 0; j <= n; j++) {
+            const y = -1 + (j / n) * 2;
+            const z = -(x * x + y * y);
+            const p = project(x, y, z);
+            path += (j === 0 ? 'M' : 'L') + p.x.toFixed(1) + ' ' + p.y.toFixed(1) + ' ';
+        }
+        wireframeSvg += `<path d="${path}" fill="none" stroke="#6366f1" stroke-width="1.2" opacity="0.65"/>\n`;
+    }
+
+    // Draw grid lines in Y
+    for (let j = 0; j <= n; j++) {
+        const y = -1 + (j / n) * 2;
+        let path = '';
+        for (let i = 0; i <= n; i++) {
+            const x = -1 + (i / n) * 2;
+            const z = -(x * x + y * y);
+            const p = project(x, y, z);
+            path += (i === 0 ? 'M' : 'L') + p.x.toFixed(1) + ' ' + p.y.toFixed(1) + ' ';
+        }
+        wireframeSvg += `<path d="${path}" fill="none" stroke="#6366f1" stroke-width="1.2" opacity="0.65"/>\n`;
+    }
+
+    // Gradient descent path descending to minimum
+    const gdPoints = [[-0.8, -0.6], [-0.5, -0.3], [-0.2, -0.1], [-0.05, -0.02], [0, 0]];
+    let gdPathStr = '';
+    let gdPointsSvg = '';
+    gdPoints.forEach((pt, i) => {
+        const [x, y] = pt;
+        const z = -(x * x + y * y);
+        const p = project(x, y, z);
+        gdPathStr += (i === 0 ? 'M' : 'L') + p.x.toFixed(1) + ' ' + p.y.toFixed(1) + ' ';
+        gdPointsSvg += `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${i === gdPoints.length - 1 ? 6 : 4}" fill="${i === gdPoints.length - 1 ? '#ef4444' : '#f59e0b'}"/>\n`;
     });
 
-    // GD path
-    const gdPath = [[15, 15], [10, 8], [6, 4], [3, 2], [1, 0.5], [0.2, 0.1]];
-    const toX = v => pad + ((v + range) / (2 * range)) * size;
-    const toY = v => pad + ((range - v) / (2 * range)) * size;
-    let pathStr = gdPath.map((p, i) => `${i === 0 ? 'M' : 'L'}${toX(p[0]).toFixed(1)} ${toY(p[1]).toFixed(1)}`).join(' ');
+    const gdPathSvg = `<path d="${gdPathStr}" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round"/>\n`;
+    const minP = project(0, 0, 0);
 
     return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${total * 2}" height="${total * 2}" viewBox="0 0 ${total} ${total}">
   <rect width="${total}" height="${total}" fill="white" rx="6"/>
-  <text x="${total / 2}" y="20" text-anchor="middle" font-size="14" font-weight="600" fill="#1e293b" font-family="sans-serif">Squared Error Cost J(w, b) = w² + b²</text>
-  <!-- Axis lines -->
-  <line x1="${pad}" y1="${pad + size / 2}" x2="${pad + size}" y2="${pad + size / 2}" stroke="#cbd5e1" stroke-width="1"/>
-  <line x1="${pad + size / 2}" y1="${pad}" x2="${pad + size / 2}" y2="${pad + size}" stroke="#cbd5e1" stroke-width="1"/>
-  ${contoursSvg}
-  <!-- GD path -->
-  <path d="${pathStr}" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round"/>
-  ${gdPath.map(p => `<circle cx="${toX(p[0])}" cy="${toY(p[1])}" r="3" fill="#ef4444"/>`).join('')}
+  
+  <text x="${total / 2}" y="40" text-anchor="middle" font-size="20" font-weight="600" fill="#1e293b" font-family="sans-serif">Convex Cost Surface J(w, b)</text>
+  
+  <!-- 3D Wireframe Paraboloid -->
+  ${wireframeSvg}
+  
+  <!-- Gradient Descent Trajectory -->
+  ${gdPathSvg}
+  ${gdPointsSvg}
+  
   <!-- Labels -->
-  <text x="${pad + size / 2}" y="${pad + size + 20}" text-anchor="middle" font-size="11" fill="#64748b" font-family="sans-serif">b</text>
-  <text x="${pad - 20}" y="${pad + size / 2 + 4}" text-anchor="middle" font-size="11" fill="#64748b" font-family="sans-serif">w</text>
-  <!-- Ticks -->
-  <text x="${pad}" y="${pad + size + 16}" text-anchor="middle" font-size="9" fill="#94a3b8" font-family="sans-serif">-${range}</text>
-  <text x="${pad + size}" y="${pad + size + 16}" text-anchor="middle" font-size="9" fill="#94a3b8" font-family="sans-serif">${range}</text>
-  <text x="${pad - 8}" y="${pad + 4}" text-anchor="end" font-size="9" fill="#94a3b8" font-family="sans-serif">${range}</text>
-  <text x="${pad - 8}" y="${pad + size + 4}" text-anchor="end" font-size="9" fill="#94a3b8" font-family="sans-serif">-${range}</text>
+  <text x="${minP.x}" y="${minP.y + 25}" text-anchor="middle" font-size="14" font-weight="600" fill="#ef4444" font-family="sans-serif">Global Minimum</text>
+  <text x="${minP.x - 220}" y="${minP.y + 110}" text-anchor="middle" font-size="14" font-weight="600" fill="#64748b" font-family="sans-serif">w / parameter 1</text>
+  <text x="${minP.x + 220}" y="${minP.y + 110}" text-anchor="middle" font-size="14" font-weight="600" fill="#64748b" font-family="sans-serif">b / parameter 2</text>
 </svg>`;
 }
 
