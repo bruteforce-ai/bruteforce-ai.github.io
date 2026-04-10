@@ -216,7 +216,7 @@
                     </p>
                 </div>
                 <div class="side-content">
-                    <div class="mini-graph" data-function="x => x + 2"
+                    <div class="mini-graph" data-function="x => x + 2" data-title="Residuals"
                         data-points="0,1.4; 1,3.9; 2,3.2; 3,5.5; 4,4.8; 5,7.2" data-show-residuals="true"
                         data-residual-labels="true" data-min="0" data-max="5" data-x-title="Distance travelled (x)"
                         data-y-title="Price (y)" data-hover-tooltip="false" data-color="#6366f1" data-width="100%"
@@ -387,8 +387,8 @@
 
             <div class="math-block plain">
                 $$\begin{align*}
-                w_0^*, w_1^* = \arg\min_{w_0, w_1} \sum_{n} (y_i - f(x_i))^2 \\
-                w_0^*, w_1^* = \arg\min_{w_0, w_1} \sum_{n} (y_i - w_0 - w_1x_i)^2
+                w_0^*, w_1^* = \arg\min_{w_0, w_1} \sum_{i} (y_i - f(x_i))^2 \\
+                w_0^*, w_1^* = \arg\min_{w_0, w_1} \sum_{i} (y_i - w_0 - w_1x_i)^2
                 \end{align*}$$
             </div>
 
@@ -647,9 +647,10 @@
             - Least squares solution is such that, distance between $y^*$ and $y$ is minimal. <br>
             - Therefore, line joining $y^*$ to $y$ to $y$ should be <strong>orthogonal to the column space</strong>.
 
-            <div class="mini-graph" data-min="0" data-max="7" data-points="4,3; 5,1; 6,0"
-                data-vectors="0,0,4,3,y*; 0,0,5,1,x2; 0,0,6,0,x1" data-dotted-lines="0,0,4.7,0.6; 4,3,4.7,0.6"
-                data-x-title=" " data-y-title=" " style="width: 70%; margin: 2rem auto;">
+            <div class="mini-graph" data-title="Geometric Interpretation with Vectors" data-min="0" data-max="7"
+                data-points="4,3; 5,1; 6,0" data-vectors="0,0,4,3,y*; 0,0,5,1,x2; 0,0,6,0,x1"
+                data-dotted-lines="0,0,4.7,0.6; 4,3,4.7,0.6" data-x-title=" " data-y-title=" "
+                style="width: 70%; margin: 2rem auto;">
             </div>
 
             <div class="math-block plain">
@@ -702,8 +703,9 @@
                 <strong>Terms</strong><br>
                 $\theta =$ believing the coin to be fair (random variable) <br>
                 $D = $ our observations <br>
+                $p(\theta) = $ prior probability <br>
+                $p(D) = $ evidence <br>
                 $p(\theta|D) = $ posterior probability <br>
-                $p(D) = $ prior probability <br>
                 $p(D|\theta) = $ likelihood <br>
             </div>
 

@@ -1084,3 +1084,140 @@ pre[class*="language-"] {
     color: var(--accent-primary);
     text-decoration: underline;
 }
+
+/* ─── Neural Network Diagram Component ───────────────────────────────────── */
+:root {
+    --nn-edge: rgba(148, 163, 184, 0.30);
+    --nn-node-border: var(--accent-primary);
+    --nn-label-fs: 0.7rem;
+}
+
+[data-theme="dark"] {
+    --nn-edge: rgba(148, 163, 184, 0.20);
+}
+
+/* Wrapper that holds the diagram */
+.neural-net {
+    margin: 2.5rem auto;
+    padding: 1.5rem 1rem 0.5rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 1rem;
+    box-shadow: var(--card-shadow);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow: hidden;
+}
+
+.neural-net.plain {
+    background: transparent;
+    border: none;
+    border-radius: 1rem;
+    box-shadow: none;
+}
+
+.nn-svg-wrap {
+    width: 100%;
+    max-width: 700px;
+}
+
+.nn-svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    overflow: visible;
+}
+
+/* Edges */
+.nn-edge {
+    stroke-width: 1.4;
+    fill: none;
+    transition: stroke 0.2s;
+}
+
+/* Nodes */
+.nn-node {
+    stroke-width: 2;
+    transition: filter 0.2s, stroke 0.2s;
+    cursor: default;
+}
+
+.nn-node:hover {
+    filter: drop-shadow(0 0 8px var(--accent-primary));
+}
+
+/* Layer axis labels */
+.nn-layer-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 600;
+    fill: var(--text-muted);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+/* Math-based layer labels via foreignObject */
+.nn-layer-fo {
+    overflow: visible;
+    pointer-events: none;
+}
+
+.nn-layer-label-math {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 10%;
+    font-weight: 600;
+    color: var(--text-muted);
+    pointer-events: none;
+    user-select: none;
+}
+
+.nn-layer-label-math .katex {
+    font-size: 0.9rem;
+}
+
+/* ForeignObject containers — must be transparent for click-through */
+.nn-node-fo,
+.nn-edge-fo {
+    overflow: visible;
+    pointer-events: none;
+}
+
+/* Labels inside nodes */
+.nn-node-label {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--nn-label-fs);
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+}
+
+.nn-node-label .katex {
+    font-size: 0.7rem;
+}
+
+/* Labels on edges */
+.nn-edge-label {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6rem;
+    line-height: 1;
+    color: var(--text-secondary);
+    pointer-events: none;
+    user-select: none;
+}
+
+.nn-edge-label .katex {
+    font-size: 0.6rem;
+}

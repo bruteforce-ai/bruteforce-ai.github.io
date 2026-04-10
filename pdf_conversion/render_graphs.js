@@ -383,7 +383,7 @@ function render3DPlotSVG() {
                 const svg = render3DPlotSVG();
                 await sharp(Buffer.from(svg)).png().toFile(outFile);
                 console.log(`      ✅  3D Cost Surface`);
-                manifest[key].push({ index: '3d', title: 'Squared Error Cost Surface J(w, b)', file: `graphs/${key}-3d.png` });
+                manifest[key].push({ index: '3d', title: 'Convex Function of Squared Error Cost Surface J(w, b)', file: `graphs/${key}-3d.png` });
             } catch (err) {
                 console.error(`      ❌  3D plot: ${err.message}`);
             }

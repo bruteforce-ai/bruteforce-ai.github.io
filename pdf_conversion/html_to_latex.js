@@ -40,7 +40,7 @@ function buildPreamble() {
 \\fancyfoot[R]{\\thepage}
 ` : '';
 
-    return `\\documentclass[${config.fontSize}, ${config.paperSize}]{book}
+    return `\\documentclass[${config.fontSize}, ${config.paperSize}, openany]{book}
 
 \\usepackage[T1]{fontenc}
 \\usepackage[utf8]{inputenc}
@@ -90,7 +90,7 @@ ${fancyhdr}
 
 \\begin{document}
 \\maketitle
-${config.tableOfContents ? '\\tableofcontents\n\\newpage' : ''}
+${config.tableOfContents ? '\\begingroup\n\\setlength{\\parskip}{0pt}\n\\tableofcontents\n\\endgroup\n\\newpage' : ''}
 `;
 }
 

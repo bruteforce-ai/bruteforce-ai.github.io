@@ -604,6 +604,244 @@ function initMiniGraphs() {
     });
 }
 
+// ─── Neural Network Diagram Engine ───────────────────────────────────────────
+//
+// Usage: <div class="neural-net"
+//   data-layers="3,4,4,2"
+//   data-layer-labels="Input,Hidden 1,Hidden 2,Output"
+//   data-node-labels="0:0=$x_1$; 0:1=$x_2$; 0:2=$x_3$; 3:0=$\hat{y}_1$; 3:1=$\hat{y}_2$"
+//   data-node-colors="3:0=#6366f1; 3:1=#6366f1"
+//   data-edges="0:0-1:0=$w_{11}$; 0:0-1:1=$w_{12}$"
+//   data-edge-colors="0:0-1:0=#f59e0b"
+//   data-title="My Network"
+//   data-height="320px"
+// ></div>
+
+function initNeuralNetDiagrams() {
+    let _nnIdx = 0;
+    document.querySelectorAll('.neural-net').forEach(container => {
+        const _id = _nnIdx++;
+        const layersStr = container.getAttribute('data-layers') || '3,4,2';
+        const layerLabels = (container.getAttribute('data-layer-labels') || '').split(',').map(s => s.trim());
+        const nodeLabels = parseKVList(container.getAttribute('data-node-labels') || '');   // "L:N=label"
+        const nodeColors = parseKVList(container.getAttribute('data-node-colors') || '');   // "L:N=#hex"
+        const edgesMeta = parseEdgeList(container.getAttribute('data-edges') || '');        // "L:N-L:N=label"
+        const edgeColors = parseEdgeColorList(container.getAttribute('data-edge-colors') || ''); // "L:N-L:N=#hex"
+        const title = container.getAttribute('data-title') || '';
+        const heightPx = parseInt(container.getAttribute('data-height') || '320', 10);
+
+        const layers = layersStr.split(',').map(n => parseInt(n.trim(), 10)).filter(n => !isNaN(n) && n > 0);
+        if (layers.length === 0) return;
+
+        // ── Layout constants ────────────────────────────────────────────────
+        const W = 700, H = heightPx;
+        const R = 18;                        // node radius
+        const PAD_X = 60, PAD_TOP = 48, PAD_BOT = 36;
+
+        const layerX = layers.map((_, li) =>
+            PAD_X + li * ((W - 2 * PAD_X) / (layers.length - 1 || 1))
+        );
+
+        // Precompute node centres
+        const nodePos = layers.map((count, li) => {
+            const usable = H - PAD_TOP - PAD_BOT;
+            const step = count > 1 ? usable / (count - 1) : 0;
+            const startY = PAD_TOP + (count > 1 ? 0 : usable / 2);
+            return Array.from({ length: count }, (_, ni) => ({
+                x: layerX[li],
+                y: startY + ni * step
+            }));
+        });
+
+        // ── Build SVG markup ────────────────────────────────────────────────
+        let edgeSVG = '';
+        let nodeSVG = '';
+        let labelSVG = ''; // foreignObject labels rendered last (on top)
+        let axisLabelSVG = '';
+
+        // ── Edges ───────────────────────────────────────────────────────────
+        // Default: draw all connections between adjacent layers
+        const defaultEdges = [];
+        for (let li = 0; li < layers.length - 1; li++) {
+            for (let ni = 0; ni < layers[li]; ni++) {
+                for (let nj = 0; nj < layers[li + 1]; nj++) {
+                    defaultEdges.push({ l1: li, n1: ni, l2: li + 1, n2: nj, label: '', color: '' });
+                }
+            }
+        }
+
+        // Merge custom edges (override default with label/color)
+        const customEdgeMap = {};
+        edgesMeta.forEach(e => { customEdgeMap[`${e.l1}:${e.n1}-${e.l2}:${e.n2}`] = e.label; });
+        edgeColors.forEach(e => { customEdgeMap[`__col__${e.l1}:${e.n1}-${e.l2}:${e.n2}`] = e.color; });
+
+        // If user specified edges, use only those; otherwise use all defaults
+        const edgesToDraw = edgesMeta.length > 0
+            ? edgesMeta
+            : defaultEdges;
+
+        edgesToDraw.forEach(e => {
+            const { l1, n1, l2, n2 } = e;
+            if (!nodePos[l1] || !nodePos[l1][n1] || !nodePos[l2] || !nodePos[l2][n2]) return;
+
+            const p1 = nodePos[l1][n1];
+            const p2 = nodePos[l2][n2];
+            const key = `${l1}:${n1}-${l2}:${n2}`;
+            const label = customEdgeMap[key] || e.label || '';
+            const color = customEdgeMap[`__col__${key}`] || e.color || 'var(--nn-edge, rgba(148,163,184,0.35))';
+
+            // midpoint for label
+            const mx = (p1.x + p2.x) / 2;
+            const my = (p1.y + p2.y) / 2;
+
+            edgeSVG += `<line class="nn-edge" x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${color}"/>`;
+
+            if (label) {
+                // Use foreignObject to support KaTeX
+                edgeSVG += `<rect x="${mx - 18}" y="${my - 10}" width="36" height="20" rx="4"
+                    fill="var(--bg-primary)" stroke="${color}" stroke-width="0.8" opacity="0.92"/>`;
+                labelSVG += `<foreignObject x="${mx - 28}" y="${my - 12}" width="56" height="24" class="nn-edge-fo">
+                    <div xmlns="http://www.w3.org/1999/xhtml" class="nn-edge-label" data-latex="${escapeAttr(label)}">${label}</div>
+                </foreignObject>`;
+            }
+        });
+
+        // ── Nodes ───────────────────────────────────────────────────────────
+        nodePos.forEach((layer, li) => {
+            layer.forEach((pos, ni) => {
+                const key = `${li}:${ni}`;
+                const color = nodeColors[key] || '';
+                const label = nodeLabels[key] || '';
+
+                const fill = color ? color : 'var(--bg-primary)';
+                const stroke = color ? color : 'var(--nn-node-border, var(--accent-primary))';
+                const glow = color ? `filter: drop-shadow(0 0 6px ${color}88);` : '';
+
+                nodeSVG += `<circle class="nn-node" cx="${pos.x}" cy="${pos.y}" r="${R}"
+                    fill="${fill}" stroke="${stroke}" style="${glow}"/>`;
+
+                if (label) {
+                    // foreignObject for KaTeX rendering inside node
+                    const fw = R * 2 + 8, fh = R * 2 + 8;
+                    const textColor = color ? '#fff' : 'var(--text-primary)';
+                    labelSVG += `<foreignObject x="${pos.x - fw / 2}" y="${pos.y - fh / 2}" width="${fw}" height="${fh}" class="nn-node-fo">
+                        <div xmlns="http://www.w3.org/1999/xhtml" class="nn-node-label" data-latex="${escapeAttr(label)}" style="color:${textColor}">${label}</div>
+                    </foreignObject>`;
+                }
+            });
+        });
+
+        // ── Layer axis labels ───────────────────────────────────────────────
+        // If the label contains $...$ math, use a foreignObject so KaTeX can render it.
+        // Otherwise fall back to a plain SVG <text> element.
+        layers.forEach((_, li) => {
+            const lbl = layerLabels[li] || '';
+            if (!lbl) return;
+            const hasMath = /\$[^$]+\$/.test(lbl);
+            if (hasMath) {
+                // foreignObject centred below the layer column
+                const foW = 80, foH = 22;
+                axisLabelSVG += `<foreignObject x="${layerX[li] - foW / 2}" y="${H - foH - 2}" width="${foW}" height="${foH}" class="nn-layer-fo">
+                    <div xmlns="http://www.w3.org/1999/xhtml" class="nn-layer-label-math" data-latex="${escapeAttr(lbl)}">${lbl}</div>
+                </foreignObject>`;
+            } else {
+                axisLabelSVG += `<text class="nn-layer-label" x="${layerX[li]}" y="${H - 6}" text-anchor="middle">${lbl}</text>`;
+            }
+        });
+
+        // ── Assemble ────────────────────────────────────────────────────────
+        const titleHTML = title ? `<div class="mini-graph-title">${title}</div>` : '';
+
+        container.innerHTML = `
+            ${titleHTML}
+            <div class="nn-svg-wrap" style="height:${H}px;">
+                <svg class="nn-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">
+                    <defs>
+                        <marker id="nn-arrow-${_id}" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+                            <path d="M0,0 L0,7 L7,3.5 z" fill="var(--accent-primary)"/>
+                        </marker>
+                    </defs>
+                    <g class="nn-edges">${edgeSVG}</g>
+                    <g class="nn-nodes">${nodeSVG}</g>
+                    <g class="nn-axis-labels">${axisLabelSVG}</g>
+                    <g class="nn-foreignobjects">${labelSVG}</g>
+                </svg>
+            </div>
+        `;
+
+        // ── Render LaTeX in labels via KaTeX ────────────────────────────────
+        container.querySelectorAll('[data-latex]').forEach(el => {
+            const src = el.getAttribute('data-latex');
+            if (!src) return;
+            // Try inline math first ($...$), else treat as raw string
+            const mathMatch = src.match(/^\$(.+)\$$/s);
+            if (mathMatch && window.katex) {
+                try {
+                    el.innerHTML = katex.renderToString(mathMatch[1], { throwOnError: false, displayMode: false });
+                    return;
+                } catch (_) { }
+            }
+            // fallback: plain text
+            el.textContent = src;
+        });
+    });
+}
+
+// ─── Parsing helpers ──────────────────────────────────────────────────────────
+// Parses "L:N=$label$; L:N=$label$" → { 'L:N': 'label' }
+function parseKVList(str) {
+    const map = {};
+    if (!str.trim()) return map;
+    str.split(';').forEach(entry => {
+        const eqIdx = entry.indexOf('=');
+        if (eqIdx === -1) return;
+        const key = entry.slice(0, eqIdx).trim();
+        const val = entry.slice(eqIdx + 1).trim();
+        map[key] = val;
+    });
+    return map;
+}
+
+// Parses "L1:N1-L2:N2=$label$; ..." → [{ l1, n1, l2, n2, label }]
+function parseEdgeList(str) {
+    if (!str.trim()) return [];
+    return str.split(';').map(entry => {
+        const eqIdx = entry.indexOf('=');
+        const coords = (eqIdx !== -1 ? entry.slice(0, eqIdx) : entry).trim();
+        const label = eqIdx !== -1 ? entry.slice(eqIdx + 1).trim() : '';
+        const [from, to] = coords.split('-');
+        if (!from || !to) return null;
+        const [l1, n1] = from.split(':').map(Number);
+        const [l2, n2] = to.split(':').map(Number);
+        if ([l1, n1, l2, n2].some(isNaN)) return null;
+        return { l1, n1, l2, n2, label };
+    }).filter(Boolean);
+}
+
+// Parses "L1:N1-L2:N2=#hex; ..." → [{ l1, n1, l2, n2, color }]
+function parseEdgeColorList(str) {
+    if (!str.trim()) return [];
+    return str.split(';').map(entry => {
+        const [coords, color] = entry.split('=');
+        if (!coords || !color) return null;
+        const [from, to] = coords.trim().split('-');
+        if (!from || !to) return null;
+        const [l1, n1] = from.split(':').map(Number);
+        const [l2, n2] = to.split(':').map(Number);
+        if ([l1, n1, l2, n2].some(isNaN)) return null;
+        return { l1, n1, l2, n2, color: color.trim() };
+    }).filter(Boolean);
+}
+
+function escapeAttr(str) {
+    return str.replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    initNeuralNetDiagrams();
+});
+
+// ─── 3-D Convex Plot ─────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     const plotDiv = document.getElementById('convex-3d-plot');
     if (plotDiv) {

@@ -315,7 +315,56 @@ def scaled_dot_product_attention(q, k, v, mask=None):
                 </div>
             </div>
 
+
+            <h2>Neural Network Diagrams</h2>
+            <p>The <code>.neural-net</code> component renders fully-connected networks from simple HTML attributes — no
+                JavaScript configuration needed. Supports KaTeX labels on nodes and edges, custom highlight colours, and
+                layer titles.</p>
+
+            <h3>1. Plain MLP (No Labels)</h3>
+            <p>Specify layer sizes with <code>data-layers</code> and optionally name each layer with
+                <code>data-layer-labels</code>. All edges are drawn automatically.
+            </p>
+
+            <div class="neural-net plain" data-layers="3,5,5,2" data-layer-labels="Input,Hidden 1,Hidden 2,Output"
+                data-title="Fully-Connected Neural Network" data-height="300">
+            </div>
+            <p class="media-caption" style="text-align:center;">A 3→5→5→2 MLP. Default: all adjacent-layer connections
+                are drawn.</p>
+
+            <h3>2. Labeled Nodes &amp; Edges (KaTeX Math)</h3>
+            <p>Add math labels to nodes with <code>data-node-labels</code> using the format
+                <code>L:N=$\LaTeX$</code> where <em>L</em> is the layer index and <em>N</em> is the neuron index
+                (both 0-based). Edge labels use <code>data-edges</code> with format
+                <code>L1:N1-L2:N2=$label$</code>. Highlight any node or edge with
+                <code>data-node-colors</code> / <code>data-edge-colors</code> using the same addressing scheme.
+            </p>
+
+            <div class="neural-net" data-layers="3,4,2" data-layer-labels="Input,Hidden,Output"
+                data-node-labels="0:0=$x_1$; 0:1=$x_2$; 0:2=$x_3$; 2:0=$\hat{y}_1$; 2:1=$\hat{y}_2$"
+                data-node-colors="2:0=#6366f1; 2:1=#6366f1; 1:1=#10b981"
+                data-edge-colors="0:0-1:0=#f59e0b; 0:1-1:0=#f59e0b; 0:2-1:0=#f59e0b"
+                data-title="Labeled Network with Highlighted Paths" data-height="280">
+            </div>
+            <p class="media-caption" style="text-align:center;">Output nodes coloured indigo, a hidden neuron coloured
+                green, and the top-hidden-neuron's incoming edges highlighted amber.</p>
+
+            <h3>3. Custom Sparse Edges with Edge Labels</h3>
+            <p>When <code>data-edges</code> is provided, <em>only those edges are drawn</em>. This lets you
+                highlight a specific signal path or show a skip connection.</p>
+
+            <div class="neural-net" data-layers="2,3,3,1" data-layer-labels="Input,$h^{(1)}$,$h^{(2)}$,Output"
+                data-node-labels="0:0=$x_1$; 0:1=$x_2$; 3:0=$\hat{y}$"
+                data-node-colors="0:0=#0ea5e9; 0:1=#0ea5e9; 3:0=#e11d48"
+                data-edges="0:0-1:0=$w_{11}$; 0:0-1:1=$w_{12}$; 0:1-1:1=$w_{22}$; 0:1-1:2=$w_{23}$; 1:0-2:0; 1:1-2:1; 1:2-2:2; 2:0-3:0=$u_1$; 2:1-3:0=$u_2$"
+                data-edge-colors="0:0-1:0=#0ea5e9; 0:0-1:1=#0ea5e9; 2:0-3:0=#e11d48; 2:1-3:0=#e11d48"
+                data-title="Sparse Path Highlighting" data-height="300">
+            </div>
+            <p class="media-caption" style="text-align:center;">Only the specified edges are drawn; edge labels show
+                weight names in math notation.</p>
+
             <section class="references-section">
+
                 <h2>References & Further Reading</h2>
                 <ol class="references-list">
                     <li>Vaswani, A., et al. (2017). <a href="https://arxiv.org/abs/1706.03762" target="_blank">Attention
