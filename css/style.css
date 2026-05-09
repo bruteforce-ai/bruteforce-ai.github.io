@@ -18,6 +18,19 @@ body {
     overflow-x: hidden;
 }
 
+/* Branding Logos */
+.brand-logo-dark {
+    display: none;
+}
+
+[data-theme="dark"] .brand-logo-light {
+    display: none;
+}
+
+[data-theme="dark"] .brand-logo-dark {
+    display: inline-block;
+}
+
 /* Layout */
 .container {
     max-width: 900px;
@@ -1220,4 +1233,91 @@ pre[class*="language-"] {
 
 .nn-edge-label .katex {
     font-size: 0.6rem;
+}
+
+/* ─── CNN Volume Diagram Component ──────────────────────────────────────────── */
+.cnn-diagram {
+    margin: 2.5rem auto;
+    padding: 1.5rem 1rem 2rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 1rem;
+    box-shadow: var(--card-shadow);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: auto;
+}
+
+.cnn-diagram.plain {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+.cnn-svg-wrap {
+    width: 100%;
+    max-width: 900px;
+}
+
+.cnn-svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    overflow: visible;
+}
+
+.cnn-vol {
+    stroke-width: 1.3;
+    transition: opacity 0.2s;
+}
+
+.cnn-vol:hover {
+    opacity: 0.85;
+}
+
+.cnn-trap {
+    fill-rule: nonzero;
+}
+
+.cnn-conn-line {
+    stroke: var(--border-color);
+    stroke-width: 0.7;
+    fill: none;
+    stroke-dasharray: 3 3;
+}
+
+.cnn-dashed {
+    stroke: var(--text-muted);
+    stroke-width: 0.9;
+    fill: none;
+    stroke-dasharray: 4 3;
+    opacity: 0.6;
+}
+
+.cnn-fc-line {
+    stroke: var(--border-color);
+    stroke-width: 0.5;
+    fill: none;
+    opacity: 0.45;
+}
+
+/* Text labels */
+.cnn-lname {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.cnn-ldim {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.6rem;
+    fill: var(--text-muted);
+}
+
+.cnn-lparam {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.6rem;
+    fill: var(--text-secondary);
+    font-style: italic;
 }

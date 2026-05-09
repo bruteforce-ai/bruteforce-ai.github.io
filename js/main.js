@@ -837,7 +837,273 @@ function escapeAttr(str) {
     return str.replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+// ─── CNN Diagram Engine (reference-style: stacked slabs + neuron circles) ─────
+// Layer JSON fields: { type, h, w, d, label, sublabel, filter, stride, padding,
+//                     pixelGrid, image, showKernel, classes, probs }
+// type: input | conv | pool | relu | bn | flatten | fc | output
+function initCNNDiagrams() {
+    let _idx = 0;
+    document.querySelectorAll('.cnn-diagram').forEach(container => {
+        const id = _idx++;
+        let layers;
+        try { layers = JSON.parse(container.getAttribute('data-layers') || '[]'); }
+        catch (e) { console.error('cnn-diagram JSON:', e); return; }
+        if (!layers.length) return;
+
+        const title = container.getAttribute('data-title') || '';
+        const H_px = parseInt(container.getAttribute('data-height') || '440', 10);
+        const SVG_W = 1080, SVG_H = H_px, CY = SVG_H * 0.47;
+
+        // ── Type helpers ────────────────────────────────────────────────────
+        const isSp = l => ['input', 'conv', 'pool', 'relu', 'bn'].includes(l.type);
+        const isFL = l => l.type === 'flatten';
+        const isFC = l => l.type === 'fc';
+        const isOut = l => l.type === 'output';
+
+        // ── Sizing (spatial layers only) ────────────────────────────────────
+        const spL = layers.filter(isSp);
+        const mxH = Math.max(1, ...spL.map(l => l.h || 1));
+        const mxD = Math.max(1, ...spL.map(l => l.d || 1));
+        const logN = (v, mx) => Math.log2(v + 1) / Math.log2(mx + 1);
+
+        const vH = l => 44 + logN(l.h || 1, mxH) * 114;   // 44–158 px
+        const vW = l => vH(l) * 0.88;                       // square-ish
+        const nSt = l => Math.max(1, Math.min(9, 1 + Math.round(logN((l.d || 1), mxD) * 7.5)));
+        const SDX = 4, SDY = 3;  // per-slab stacking offset
+
+        // FC circles
+        const FC_R = 7, FC_GAP = 16, FC_MAX = 9;
+
+        // Output bars
+        const OUT_W = 34, OUT_H = 22, OUT_GAP = 6;
+
+        // ── Colors ─────────────────────────────────────────────────────────
+        // [face, stroke, dark-face, dark-stroke]
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const PAL = {
+            input: isDark ? ['#2a3f5f', '#60a5fa'] : ['#dbeafe', '#3b82f6'],
+            conv: isDark ? ['#6b5230', '#c4a070'] : ['#d4b896', '#8b6836'],
+            pool: isDark ? ['#5c4a2a', '#b09060'] : ['#c8aa82', '#7a5c28'],
+            relu: isDark ? ['#3a5c3a', '#6db86d'] : ['#c8e6c8', '#4caf50'],
+            bn: isDark ? ['#3a4a5c', '#70a0c8'] : ['#c8dcea', '#4a80a8'],
+            flatten: isDark ? ['#5c4a2a', '#b09060'] : ['#c8b080', '#7a5a28'],
+            fc: isDark ? ['#0c3050', '#38bdf8'] : ['#1e6090', '#38bdf8'],
+            output: isDark ? ['#7a4800', '#d97706'] : ['#e8c070', '#c07000'],
+        };
+        const C = l => PAL[l.type] || PAL.conv;
+
+        // ── Layer visual widths (for layout) ──────────────────────────────
+        const LW = l => {
+            if (isSp(l)) return vW(l) + (nSt(l) - 1) * SDX;
+            if (isFL(l)) return 13;
+            if (isFC(l)) return FC_R * 2;
+            if (isOut(l)) return OUT_W;
+            return 20;
+        };
+
+        // ── Gaps between layers ───────────────────────────────────────────
+        const GAP = (a, b) => {
+            if (!b) return 0;
+            if (isSp(a) && isSp(b)) return 52;
+            if (isSp(a) && isFL(b)) return 55;
+            if (isFL(a) && isFC(b)) return 44;
+            if (isFC(a) && isFC(b)) return 58;
+            if (isFC(a) && isOut(b)) return 68;
+            if (isSp(a) && isFC(b)) return 55;
+            return 50;
+        };
+
+        // ── X positions ───────────────────────────────────────────────────
+        const totalW = layers.reduce((s, l, i) => s + LW(l) + (i < layers.length - 1 ? GAP(l, layers[i + 1]) : 0), 0);
+        let cx0 = (SVG_W - totalW) / 2;
+        const XP = layers.map((l, i) => { const x = cx0; cx0 += LW(l) + (i < layers.length - 1 ? GAP(l, layers[i + 1]) : 0); return x; });
+
+        let defs = '', conn = '', vol = '', lbl = '';
+
+        // Neuron positions for connection drawing
+        const fcMeta = {}; // idx → { cx, ys[] }
+
+        // ── Draw layers ───────────────────────────────────────────────────
+        layers.forEach((l, i) => {
+            const x0 = XP[i], c = C(l);
+
+            // ── Spatial (stacked slabs) ──────────────────────────────────
+            if (isSp(l)) {
+                const h = vH(l), w = vW(l), ns = nSt(l);
+                const imgUrl = l.image || '';
+                const hasPG = l.pixelGrid || false;
+                // Paint back→front
+                for (let s = ns - 1; s >= 0; s--) {
+                    const rx = x0 + s * SDX, ry = CY - h / 2 - s * SDY;
+                    const isFront = (s === 0);
+                    if (isFront && imgUrl) {
+                        defs += `<clipPath id="cp-${id}-${i}"><rect x="${rx}" y="${ry}" width="${w}" height="${h}"/></clipPath>`;
+                        vol += `<rect x="${rx}" y="${ry}" width="${w}" height="${h}" fill="${c[0]}" stroke="${c[1]}" stroke-width="1.4"/>`;
+                        vol += `<image href="${imgUrl}" x="${rx}" y="${ry}" width="${w}" height="${h}" preserveAspectRatio="xMidYMid slice" clip-path="url(#cp-${id}-${i})"/>`;
+                        vol += `<rect x="${rx}" y="${ry}" width="${w}" height="${h}" fill="none" stroke="${c[1]}" stroke-width="1.4"/>`;
+                    } else if (isFront && hasPG) {
+                        const cols = ['#f87171', '#fb923c', '#facc15', '#4ade80', '#38bdf8', '#818cf8', '#c084fc', '#f472b6'];
+                        vol += `<rect x="${rx}" y="${ry}" width="${w}" height="${h}" fill="${c[0]}" stroke="${c[1]}" stroke-width="1.4"/>`;
+                        const gcol = 5, grow = 6, cw = w / gcol, ch = h / grow;
+                        for (let r = 0; r < grow; r++) for (let gc = 0; gc < gcol; gc++)
+                            vol += `<rect x="${rx + gc * cw}" y="${ry + r * ch}" width="${cw}" height="${ch}" fill="${cols[(r * 3 + gc * 2) % cols.length]}" opacity="0.82"/>`;
+                        vol += `<rect x="${rx}" y="${ry}" width="${w}" height="${h}" fill="none" stroke="${c[1]}" stroke-width="1.5"/>`;
+                    } else {
+                        const op = isFront ? 1 : Math.max(0.55, 1 - s * 0.12);
+                        vol += `<rect x="${rx}" y="${ry}" width="${w}" height="${h}" fill="${c[0]}" stroke="${c[1]}" stroke-width="1.3" opacity="${op}"/>`;
+                    }
+                    // Kernel highlight on front convolution slab
+                    if (isFront && l.showKernel) {
+                        const kw = w * 0.26, kh = h * 0.20;
+                        vol += `<rect x="${rx + w * 0.08}" y="${ry + h * 0.62}" width="${kw}" height="${kh}" fill="rgba(234,179,8,0.18)" stroke="#eab308" stroke-width="2" rx="2"/>`;
+                    }
+                }
+            }
+
+            // ── Flatten ──────────────────────────────────────────────────
+            else if (isFL(l)) {
+                const h = 145, c2 = C(l);
+                vol += `<rect x="${x0}" y="${CY - h / 2}" width="13" height="${h}" fill="${c2[0]}" stroke="${c2[1]}" stroke-width="1.5" rx="1"/>`;
+            }
+
+            // ── FC (neuron circles) ──────────────────────────────────────
+            else if (isFC(l)) {
+                const d = l.d || 4, drawn = Math.min(d, FC_MAX);
+                const totalH = (drawn - 1) * FC_GAP;
+                const startY = CY - totalH / 2;
+                const cxN = x0 + FC_R;
+                const ys = [];
+                for (let n = 0; n < drawn; n++) {
+                    const cy2 = startY + n * FC_GAP;
+                    ys.push(cy2);
+                    vol += `<circle cx="${cxN}" cy="${cy2}" r="${FC_R}" fill="${c[0]}" stroke="${c[1]}" stroke-width="2"/>`;
+                }
+                if (d > FC_MAX) {
+                    vol += `<text x="${cxN}" y="${startY + totalH + FC_GAP}" text-anchor="middle" class="cnn-ldim" fill="${c[1]}" font-size="14">⋮</text>`;
+                }
+                fcMeta[i] = { cx: cxN, ys };
+            }
+
+            // ── Output bars ──────────────────────────────────────────────
+            else if (isOut(l)) {
+                const classes = l.classes || [], probs = l.probs || [];
+                const n = Math.max(classes.length, l.d || 1);
+                const totalH = n * (OUT_H + OUT_GAP) - OUT_GAP;
+                const startY = CY - totalH / 2;
+                for (let k = 0; k < n; k++) {
+                    const by = startY + k * (OUT_H + OUT_GAP);
+                    const prob = probs[k] !== undefined ? probs[k] : '';
+                    vol += `<rect x="${x0}" y="${by}" width="${OUT_W}" height="${OUT_H}" fill="${c[0]}" stroke="${c[1]}" stroke-width="1.5" rx="3"/>`;
+                    if (prob !== '') vol += `<text x="${x0 + OUT_W / 2}" y="${by + OUT_H * 0.68}" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="600" fill="${c[1]}">${prob}</text>`;
+                    if (classes[k]) lbl += `<text x="${x0 + OUT_W + 10}" y="${by + OUT_H * 0.68}" font-family="Inter,sans-serif" font-size="10" fill="var(--text-secondary)">${classes[k]}</text>`;
+                }
+            }
+
+            // ── Layer labels ─────────────────────────────────────────────
+            const name = l.label || l.type.toUpperCase();
+            const lx = x0 + LW(l) / 2;
+            let botY = CY + 80;
+            if (isSp(l)) botY = CY + vH(l) / 2 + (nSt(l) - 1) * 0 + 22;
+            if (isFL(l)) botY = CY + 145 / 2 + 20;
+            if (isFC(l) && fcMeta[i]) botY = fcMeta[i].ys.at(-1) + FC_R + 18;
+            if (isOut(l)) { const n = Math.max((l.classes || []).length, l.d || 1); botY = CY + (n * (OUT_H + OUT_GAP)) / 2 + 14; }
+
+            lbl += `<text x="${lx}" y="${botY}" text-anchor="middle" class="cnn-lname" fill="var(--text-muted)">${name}</text>`;
+            if (l.sublabel) lbl += `<text x="${lx}" y="${botY + 14}" text-anchor="middle" class="cnn-ldim">${l.sublabel}</text>`;
+
+            // Param labels above
+            const params = [];
+            if (l.filter !== undefined) params.push(`k=${l.filter}`);
+            if (l.stride !== undefined) params.push(`s=${l.stride}`);
+            if (l.padding !== undefined) params.push(`p=${l.padding}`);
+            if (params.length) {
+                const topY = isSp(l) ? CY - vH(l) / 2 - (nSt(l) - 1) * SDY - 11 : CY - 80;
+                lbl += `<text x="${lx}" y="${topY}" text-anchor="middle" class="cnn-lparam">${params.join(' · ')}</text>`;
+            }
+        });
+
+        // ── Connections ───────────────────────────────────────────────────
+        layers.forEach((l, i) => {
+            if (i >= layers.length - 1) return;
+            const nx = layers[i + 1], x0 = XP[i], x1 = XP[i + 1];
+
+            // Spatial → Spatial: X-pattern 4 dashed lines
+            if (isSp(l) && isSp(nx)) {
+                const h1 = vH(l), w1 = vW(l), ns1 = nSt(l);
+                const h2 = vH(nx), ns2 = nSt(nx);
+                // Front face right corners of A
+                const aftr = x0 + w1, afty = CY - h1 / 2, afby = CY + h1 / 2;
+                // Back face left corners of A → right of back
+                const abtx = x0 + (ns1 - 1) * SDX + w1, abty = CY - h1 / 2 - (ns1 - 1) * SDY, abby = CY + h1 / 2 - (ns1 - 1) * SDY;
+                // Front face left of B
+                const bflx = x1, bfty = CY - h2 / 2, bfby = CY + h2 / 2;
+                // Back face left of B
+                const bblx = x1 + (ns2 - 1) * SDX, bbty = CY - h2 / 2 - (ns2 - 1) * SDY, bbby = CY + h2 / 2 - (ns2 - 1) * SDY;
+                conn += `<line x1="${aftr}" y1="${afty}" x2="${bblx}" y2="${bbty}" class="cnn-dashed"/>`;
+                conn += `<line x1="${aftr}" y1="${afby}" x2="${bblx}" y2="${bbby}" class="cnn-dashed"/>`;
+                conn += `<line x1="${abtx}" y1="${abty}" x2="${bflx}" y2="${bfty}" class="cnn-dashed" opacity="0.45"/>`;
+                conn += `<line x1="${abtx}" y1="${abby}" x2="${bflx}" y2="${bfby}" class="cnn-dashed" opacity="0.45"/>`;
+            }
+
+            // Spatial / Flatten → FC: fan lines
+            if ((isSp(l) || isFL(l)) && isFC(nx)) {
+                const fm = fcMeta[i + 1];
+                if (fm) {
+                    const h1 = isSp(l) ? vH(l) : 145;
+                    const srcX = x0 + LW(l);
+                    const srcTopY = CY - h1 / 2, srcBotY = CY + h1 / 2;
+                    fm.ys.forEach(ny => {
+                        conn += `<line x1="${srcX}" y1="${(srcTopY + srcBotY) / 2}" x2="${fm.cx - FC_R}" y2="${ny}" class="cnn-fc-line"/>`;
+                    });
+                    // Bounding fan lines
+                    conn += `<line x1="${srcX}" y1="${srcTopY}" x2="${fm.cx - FC_R}" y2="${fm.ys[0]}" class="cnn-dashed"/>`;
+                    conn += `<line x1="${srcX}" y1="${srcBotY}" x2="${fm.cx - FC_R}" y2="${fm.ys.at(-1)}" class="cnn-dashed"/>`;
+                }
+            }
+
+            // FC → FC: all-to-all
+            if (isFC(l) && isFC(nx)) {
+                const fa = fcMeta[i], fb = fcMeta[i + 1];
+                if (fa && fb) {
+                    fa.ys.forEach(ay => fb.ys.forEach(by =>
+                        conn += `<line x1="${fa.cx + FC_R}" y1="${ay}" x2="${fb.cx - FC_R}" y2="${by}" class="cnn-fc-line"/>`
+                    ));
+                }
+            }
+
+            // FC → Output
+            if (isFC(l) && isOut(nx)) {
+                const fa = fcMeta[i];
+                const nc = Math.max((nx.classes || []).length, nx.d || 1);
+                const totalH = nc * (OUT_H + OUT_GAP) - OUT_GAP;
+                const startY = CY - totalH / 2;
+                if (fa) {
+                    fa.ys.forEach(ay => {
+                        for (let k = 0; k < nc; k++) {
+                            const by = startY + k * (OUT_H + OUT_GAP) + OUT_H / 2;
+                            conn += `<line x1="${fa.cx + FC_R}" y1="${ay}" x2="${x1}" y2="${by}" class="cnn-fc-line"/>`;
+                        }
+                    });
+                }
+            }
+        });
+
+        const titleHTML = title ? `<div class="mini-graph-title">${title}</div>` : '';
+        container.innerHTML = `${titleHTML}
+            <div class="cnn-svg-wrap" style="height:${H_px}px;">
+                <svg class="cnn-svg" viewBox="0 0 ${SVG_W} ${SVG_H}" preserveAspectRatio="xMidYMid meet">
+                    <defs>${defs}</defs>
+                    <g class="cnn-connections">${conn}</g>
+                    <g class="cnn-volumes">${vol}</g>
+                    <g class="cnn-labels">${lbl}</g>
+                </svg>
+            </div>`;
+    });
+}
+
+
 document.addEventListener('DOMContentLoaded', () => {
+    initCNNDiagrams();
     initNeuralNetDiagrams();
 });
 

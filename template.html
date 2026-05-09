@@ -363,21 +363,108 @@ def scaled_dot_product_attention(q, k, v, mask=None):
             <p class="media-caption" style="text-align:center;">Only the specified edges are drawn; edge labels show
                 weight names in math notation.</p>
 
-            <section class="references-section">
 
-                <h2>References & Further Reading</h2>
-                <ol class="references-list">
-                    <li>Vaswani, A., et al. (2017). <a href="https://arxiv.org/abs/1706.03762" target="_blank">Attention
-                            Is All You Need</a>. arXiv.</li>
-                    <li>Alammar, J. (2018). <a href="https://jalammar.github.io/illustrated-transformer/"
-                            target="_blank">The Illustrated Transformer</a>.</li>
-                    <li>Stanford CS224N. <a href="http://web.stanford.edu/class/cs224n/" target="_blank">NLP with Deep
-                            Learning</a>.</li>
-                    <li>Phuong, M., & Hutter, M. (2022). <a href="https://arxiv.org/abs/2207.09238"
-                            target="_blank">Formal Algorithms for Transformers</a>.</li>
-                </ol>
+            <h2>Convolutional Neural Network (CNN) Diagrams</h2>
+            <p>The <code>.cnn-diagram</code> component renders 3-D perspective volume diagrams — the canonical way to
+                illustrate CNN architectures. Each layer is specified as a JSON object with any combination of:</p>
+            <ul style="color:var(--text-secondary); margin: 0.5rem 0 1.5rem 1.5rem; line-height:2;">
+                <li><code>type</code>: <code>input</code> · <code>conv</code> · <code>pool</code> · <code>relu</code> ·
+                    <code>bn</code> · <code>fc</code> · <code>output</code>
+                </li>
+                <li><code>h</code>, <code>w</code>, <code>d</code>: spatial height, width, depth (channels)</li>
+                <li><code>filter</code>, <code>stride</code>, <code>padding</code>: hyper-parameters shown above the
+                    volume</li>
+                <li><code>label</code>: display name shown below</li>
+                <li><code>pixelGrid</code>: <code>true</code> — draws a colourful pixel mosaic on the face (great for
+                    image inputs)</li>
+                <li><code>image</code>: URL string — renders an actual image on the face via SVG
+                    <code>&lt;image&gt;</code>
+                </li>
+            </ul>
+
+            <h3>1. LeNet-5 Architecture</h3>
+            <p>Spatial layers shown as stacked rectangular slabs — depth $D$ controls how many slabs stack up.
+                FC layers render as real neuron circles with all-to-all connection lines.
+                The <code>flatten</code> type draws the flattening step as a thin tall slab.</p>
+
+            <div class="cnn-diagram" data-title="LeNet-5 (LeCun et al., 1998)" data-height="400" data-layers='[
+                    {"type":"input",   "h":32,"w":32,"d":1,  "label":"Input"},
+                    {"type":"conv",    "h":28,"w":28,"d":6,  "label":"Conv1","filter":5,"stride":1,"padding":0,"showKernel":true},
+                    {"type":"pool",    "h":14,"w":14,"d":6,  "label":"AvgPool","filter":2,"stride":2},
+                    {"type":"conv",    "h":10,"w":10,"d":16, "label":"Conv2","filter":5,"stride":1,"showKernel":true},
+                    {"type":"pool",    "h":5, "w":5, "d":16, "label":"AvgPool","filter":2,"stride":2},
+                    {"type":"flatten", "h":1, "w":1, "d":400,"label":"Flatten"},
+                    {"type":"fc",      "d":120,"label":"FC-120"},
+                    {"type":"fc",      "d":84, "label":"FC-84"},
+                    {"type":"output",  "d":10, "label":"Output","classes":["0","1","2","3","…"],"probs":["","","","",""]}
+                ]'>
+            </div>
+            <p class="media-caption" style="text-align:center;">LeNet-5: stacked feature-map slabs → flatten → FC neuron
+                columns. Kernel highlights shown on conv layers.</p>
+
+            <h3>2. CNN: Image → Feature Maps → Classification</h3>
+            <p>The full reference-image style in action. Use <code>"pixelGrid": true</code> on the input for a
+                pixel-mosaic face.
+                The <code>classes</code> and <code>probs</code> fields on the <code>output</code> layer populate
+                the probability bars with class names.</p>
+
+            <div class="cnn-diagram" data-title="CNN — Image Classification Pipeline" data-height="440" data-layers='[
+                    {"type":"input",   "h":128,"w":128,"d":3,  "label":"Image Input","pixelGrid":true},
+                    {"type":"conv",    "h":126,"w":126,"d":16, "label":"Convolution","sublabel":"+ ReLU","filter":3,"stride":1,"showKernel":true},
+                    {"type":"pool",    "h":63, "w":63, "d":16, "label":"MaxPool","filter":2,"stride":2},
+                    {"type":"conv",    "h":61, "w":61, "d":32, "label":"Convolution","sublabel":"+ ReLU","filter":3,"stride":1,"showKernel":true},
+                    {"type":"pool",    "h":30, "w":30, "d":32, "label":"MaxPool","filter":2,"stride":2},
+                    {"type":"conv",    "h":28, "w":28, "d":64, "label":"Convolution","sublabel":"+ ReLU","filter":3,"stride":1},
+                    {"type":"pool",    "h":14, "w":14, "d":64, "label":"MaxPool","filter":2,"stride":2},
+                    {"type":"flatten", "d":12544,"label":"Flatten"},
+                    {"type":"fc",      "d":9,   "label":"Fully Connected"},
+                    {"type":"output",  "d":3,   "label":"SoftMax","classes":["Horse","Zebra","Dog"],"probs":[0.1,0.8,0.1]}
+                ]'>
+            </div>
+            <p class="media-caption" style="text-align:center;">3-block conv-pool with kernel highlights → flatten → FC
+                neurons → probability output bars with class names.</p>
+
+            <h3>3. Modern ConvNet with BN &amp; ReLU</h3>
+            <p>All six spatial types — <code>input</code>, <code>conv</code>, <code>pool</code>, <code>relu</code>,
+                <code>bn</code> — colour-coded distinctly so you can trace the exact forward-pass block order.
+            </p>
+
+            <div class="cnn-diagram" data-title="VGG-style Block with BatchNorm" data-height="380" data-layers='[
+                    {"type":"input",  "h":64,"w":64,"d":3,  "label":"Input"},
+                    {"type":"conv",   "h":64,"w":64,"d":32, "label":"Conv","filter":3,"stride":1,"padding":1,"showKernel":true},
+                    {"type":"bn",     "h":64,"w":64,"d":32, "label":"BatchNorm"},
+                    {"type":"relu",   "h":64,"w":64,"d":32, "label":"ReLU"},
+                    {"type":"pool",   "h":32,"w":32,"d":32, "label":"MaxPool","filter":2,"stride":2},
+                    {"type":"conv",   "h":32,"w":32,"d":64, "label":"Conv","filter":3,"stride":1,"padding":1},
+                    {"type":"bn",     "h":32,"w":32,"d":64, "label":"BatchNorm"},
+                    {"type":"relu",   "h":32,"w":32,"d":64, "label":"ReLU"},
+                    {"type":"pool",   "h":16,"w":16,"d":64, "label":"MaxPool","filter":2,"stride":2},
+                    {"type":"flatten","d":16384,"label":"Flatten"},
+                    {"type":"fc",     "d":8,  "label":"FC-256"},
+                    {"type":"output", "d":5,  "label":"Output","classes":["Cat","Dog","Bird","Car","Boat"],"probs":[0.05,0.72,0.08,0.10,0.05]}
+                ]'>
+            </div>
+            <p class="media-caption" style="text-align:center;">Explicit BN (teal) and ReLU (green) blocks; output bars
+                show 5-class softmax probabilities.</p>
+
+<section class="references-section">
+
+
+                    <h2>References & Further Reading</h2>
+                    <ol class="references-list">
+                        <li>Vaswani, A., et al. (2017). <a href="https://arxiv.org/abs/1706.03762"
+                                target="_blank">Attention
+                                Is All You Need</a>. arXiv.</li>
+                        <li>Alammar, J. (2018). <a href="https://jalammar.github.io/illustrated-transformer/"
+                                target="_blank">The Illustrated Transformer</a>.</li>
+                        <li>Stanford CS224N. <a href="http://web.stanford.edu/class/cs224n/" target="_blank">NLP with
+                                Deep
+                                Learning</a>.</li>
+                        <li>Phuong, M., & Hutter, M. (2022). <a href="https://arxiv.org/abs/2207.09238"
+                                target="_blank">Formal Algorithms for Transformers</a>.</li>
+                    </ol>
+                </section>
             </section>
-        </section>
     </main>
 
     <footer class="full-footer"></footer>
